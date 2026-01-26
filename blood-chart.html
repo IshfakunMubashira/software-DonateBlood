@@ -1,167 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BloodChart</title>
-    <style>
-        :root {
-            --red: #d90429;
-            --dark: #2b2d42;
-            --gray: #8d99ae;
-            --light: #edf2f4;
-            --check: #2a9d8f;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blood Type Compatibility</title>
 
-        body { font-family: 'Segoe UI', sans-serif; padding: 40px; background: #f8f9fa; color: var(--dark); }
-        
-        .container { max-width: 850px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+<style>
+:root {
+    --red: #d90429;
+    --dark: #2b2d42;
+    --gray: #8d99ae;
+    --light: #edf2f4;
+    --check: #2a9d8f;
+}
 
-        /* Hidden Radios */
-        .logic-gate { display: none; }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f8f9fa;
+    padding: 40px;
+    color: var(--dark);
+}
 
-        /* Table Styling */
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 4px;
-            table-layout: fixed;
-        }
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
 
-        th, td {
-            position: relative;
-            height: 50px;
-            text-align: center;
-            border-radius: 4px;
-            transition: 0.2s;
-        }
+/* logic radios */
+.logic-gate { display: none; }
 
-        /* Labels must fill the entire cell to be clickable */
-        label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            font-weight: 600;
-        }
+/* table */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 4px;
+    table-layout: fixed;
+}
 
-        /* Headers */
-        .recipient-header { background: var(--red); color: white; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; }
-        .donor-header { background: var(--dark); color: white; width: 40px; }
-        .type-header { background: var(--light); color: var(--dark); font-size: 0.9rem; }
+th, td {
+    height: 50px;
+    text-align: center;
+    border-radius: 4px;
+}
 
-        /* Cells */
-        .compat-cell { background: #f1f3f5; }
-        .compat-cell:hover { background: #ffdada; border: 1px solid var(--red); }
-        
-        /* Iconography */
-        .yes::after { content: "✓"; color: var(--check); font-size: 1.2rem; }
-        .no { opacity: 0.2; font-weight: normal; }
+label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    font-weight: 600;
+}
 
-        /* Info Panel Display Logic */
-        .info-panel {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 8px;
-            background: var(--light);
-            border-left: 6px solid var(--gray);
-            min-height: 100px;
-        }
+/* headers */
+.recipient-header {
+    background: var(--red);
+    color: white;
+    letter-spacing: 2px;
+}
 
-        .desc { display: none; animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.donor-header {
+    background: var(--dark);
+    color: white;
+    width: 40px;
+}
 
-        /* SELECTOR LOGIC: If radio X is checked, show description X */
-        #r-recipient:checked ~ .info-panel .d-recipient { display: block; }
-        #r-recipient:checked ~ .info-panel { border-color: var(--red); }
+.type-header {
+    background: var(--light);
+}
 
-        #r-donor:checked ~ .info-panel .d-donor { display: block; }
-        #r-donor:checked ~ .info-panel { border-color: var(--dark); }
+/* cells */
+.compat-cell {
+    background: #f1f3f5;
+}
 
-        #r-om:checked ~ .info-panel .d-om { display: block; }
-        #r-om:checked ~ .info-panel { border-color: var(--check); }
+.compat-cell:hover {
+    background: #ffdada;
+    border: 1px solid var(--red);
+}
 
-        #r-default:checked ~ .info-panel .d-default { display: block; }
-    </style>
+.yes::after {
+    content: "✓";
+    color: var(--check);
+    font-size: 1.2rem;
+}
+
+.no {
+    opacity: 0.25;
+}
+
+/* info panel */
+.info-panel {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--light);
+    border-left: 6px solid var(--gray);
+    min-height: 90px;
+}
+
+.desc { display: none; }
+
+#r-default:checked ~ .info-panel .d-default { display: block; }
+#r-recipient:checked ~ .info-panel .d-recipient { display: block; border-color: var(--red); }
+#r-donor:checked ~ .info-panel .d-donor { display: block; border-color: var(--dark); }
+#r-om:checked ~ .info-panel .d-om { display: block; border-color: var(--check); }
+</style>
 </head>
+
 <body>
-
 <div class="container">
-    <h2 style="text-align: center; margin-bottom: 25px;">Blood Compatibility Matrix</h2>
+<h2 style="text-align:center;margin-bottom:25px;">Blood Type Compatibility</h2>
 
-    <input type="radio" name="blood" id="r-default" class="logic-gate" checked>
-    <input type="radio" name="blood" id="r-recipient" class="logic-gate">
-    <input type="radio" name="blood" id="r-donor" class="logic-gate">
-    <input type="radio" name="blood" id="r-om" class="logic-gate">
+<input type="radio" id="r-default" name="info" class="logic-gate" checked>
+<input type="radio" id="r-recipient" name="info" class="logic-gate">
+<input type="radio" id="r-donor" name="info" class="logic-gate">
+<input type="radio" id="r-om" name="info" class="logic-gate">
 
-    <table>
-        <thead>
-            <tr>
-                <th colspan="2" rowspan="2"></th>
-                <th colspan="8" class="recipient-header">
-                    <label for="r-recipient">Recipient (Receives Blood)</label>
-                </th>
-            </tr>
-            <tr>
-                <th class="type-header">O-</th>
-                <th class="type-header">O+</th>
-                <th class="type-header">A-</th>
-                <th class="type-header">A+</th>
-                <th class="type-header">B-</th>
-                <th class="type-header">B+</th>
-                <th class="type-header">AB-</th>
-                <th class="type-header">AB+</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th rowspan="8" class="donor-header">
-                    <label for="r-donor" style="writing-mode: vertical-rl; transform: rotate(180deg);">DONOR</label>
-                </th>
-                <th class="type-header">O-</th>
-                <td class="compat-cell yes"><label for="r-om"></label></td> <td class="compat-cell yes"></td>
-                <td class="compat-cell yes"></td>
-                <td class="compat-cell yes"></td>
-                <td class="compat-cell yes"></td>
-                <td class="compat-cell yes"></td>
-                <td class="compat-cell yes"></td>
-                <td class="compat-cell yes"></td>
-            </tr>
-            <tr>
-                <th class="type-header">AB+</th>
-                <td class="compat-cell no"></td>
-                <td class="compat-cell no"></td>
-                <td class="compat-cell no"></td>
-                <td class="compat-cell no"></td>
-                <td class="compat-cell no"></td>
-                <td class="compat-cell no"></td>
-                <td class="compat-cell no"></td>
-                <td class="compat-cell yes"></td>
-            </tr>
-            </tbody>
-    </table>
+<table>
+<thead>
+<tr>
+<th rowspan="2" colspan="2"></th>
+<th colspan="8" class="recipient-header">
+<label for="r-recipient">RECIPIENT</label>
+</th>
+</tr>
+<tr>
+<th class="type-header">O−</th><th class="type-header">O+</th>
+<th class="type-header">A−</th><th class="type-header">A+</th>
+<th class="type-header">B−</th><th class="type-header">B+</th>
+<th class="type-header">AB−</th><th class="type-header">AB+</th>
+</tr>
+</thead>
 
-    <div class="info-panel">
-        <div class="desc d-default">
-            <strong>Interactive Guide:</strong> Click on the headers or cells to learn about compatibility.
-        </div>
-        <div class="desc d-recipient">
-            <h3 style="color:var(--red); margin:0;">Recipient (Patient)</h3>
-            <p>The recipient is the person who is given the blood. Their immune system will attack any blood cells that have antigens they don't already have.</p>
-        </div>
-        <div class="desc d-donor">
-            <h3 style="color:var(--dark); margin:0;">Donor (Volunteer)</h3>
-            <p>A donor provides blood for transfusion. The "Universal Donor" is O-, meaning their blood can be used by anyone safely in an emergency.</p>
-        </div>
-        <div class="desc d-om">
-            <h3 style="color:var(--check); margin:0;">The O- Match</h3>
-            <p>This is the "Universal Donor" match. O-negative blood is rare and critical because it can be used for any patient regardless of their blood type.</p>
-            <label for="r-default" style="color: blue; text-decoration: underline; cursor: pointer; justify-content: flex-start;">Back to Instructions</label>
-        </div>
-    </div>
+<tbody>
+<tr>
+<th rowspan="8" class="donor-header">
+<label for="r-donor" style="writing-mode:vertical-rl;transform:rotate(180deg);">DONOR</label>
+</th>
+<th class="type-header">O−</th>
+<td class="compat-cell yes"><label for="r-om"></label></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+</tr>
+
+<tr>
+<th class="type-header">O+</th>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+</tr>
+
+<tr>
+<th class="type-header">A−</th>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+</tr>
+
+<tr>
+<th class="type-header">A+</th>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+</tr>
+
+<tr>
+<th class="type-header">B−</th>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+</tr>
+
+<tr>
+<th class="type-header">B+</th>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+</tr>
+
+<tr>
+<th class="type-header">AB−</th>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+</tr>
+
+<tr>
+<th class="type-header">AB+</th>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell no"></td>
+<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+</tr>
+</tbody>
+</table>
+
+<div class="info-panel">
+<div class="desc d-default">
+<strong>Interactive Guide:</strong> Click headers or cells to learn blood compatibility.
 </div>
 
+<div class="desc d-recipient">
+<h3 style="color:var(--red)">Recipient</h3>
+<p>The recipient receives blood. Their immune system will reject unfamiliar antigens.</p>
+</div>
+
+<div class="desc d-donor">
+<h3 style="color:var(--dark)">Donor</h3>
+<p>Donors provide blood. O− is the universal donor for red blood cells.</p>
+</div>
+
+<div class="desc d-om">
+<h3 style="color:var(--check)">O− Universal Donor</h3>
+<p>O− blood can be given to anyone in emergencies.</p>
+<label for="r-default" style="color:blue;cursor:pointer;">Back</label>
+</div>
+</div>
+</div>
 </body>
 </html>

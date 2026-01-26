@@ -232,6 +232,55 @@ nav .nav li:hover a {
     transform: translateY(-3px);
 }
 
+
+/* Blood Chart Section */
+#blood-chart {
+    min-height: 650px;
+    padding: 80px 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: linear-gradient(
+        to bottom,
+        #fff5f5,
+        #ffffff
+    );
+}
+
+/* Inner wrapper (recommended) */
+#blood-chart .chart-wrapper {
+    width: 100%;
+    max-width: 1000px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* Links / interactive items */
+#blood-chart a {
+    display: inline-block;
+    padding: 10px 18px;
+
+    border: 2px solid #cc1a1a;
+    border-radius: 6px;
+
+    color: #cc1a1a;
+    font-weight: 600;
+    text-decoration: none;
+
+    transition: all 0.25s ease;
+}
+
+#blood-chart a:hover {
+    background: #cc1a1a;
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(204, 26, 26, 0.4);
+    transform: translateY(-2px);
+}
+
 /* Footer section */
 .footer {
     background-color: #cc1a1a;
@@ -239,7 +288,7 @@ nav .nav li:hover a {
     display: flex;
     justify-content: space-around;
     padding: 60px;
-    /* border: 1px solid white; */
+    
     height: 350px;
 }
 
