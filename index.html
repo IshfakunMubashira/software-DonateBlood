@@ -67,13 +67,47 @@
 
 
 <section id="mission-vision">
-    <div class="mission-text">
-        
-    </div>
-    <div class="mission-photo">
+    <div class="container">
 
+        <!-- Header -->
+        <div class="header">Donate Life</div>
+
+        <!-- Mission & Vision Wrapper -->
+        <div class="mission-wrapper">
+
+            <!-- Mission & Vision Cards -->
+            <div class="mission-text">
+                <div class="card">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png" alt="Mission Icon">
+                    <h2>Our Mission</h2>
+                    <p>
+                        To save lives by providing safe, voluntary, and timely blood donation. 
+                        We connect donors with those in need, ensuring help reaches every person who requires it.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2910/2910765.png" alt="Vision Icon">
+                    <h2>Our Vision</h2>
+                    <p>
+                        To create a compassionate and aware society where no life is lost due to lack of blood, 
+                        and blood donation becomes a simple, everyday act of kindness.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Illustration & Terms Button -->
+            <div class="mission-photo">
+                <img src="https://cdn-icons-png.flaticon.com/512/1170/1170576.png" alt="Donate Blood Illustration">
+                <a href="terms.html" class="terms-btn">Terms & Conditions</a>
+            </div>
+
+        </div>
     </div>
 </section>
+
+
+
 
 <section id="events">
     <div class="events-container">
@@ -81,22 +115,54 @@
 
         <div class="event-cards">
             <div class="event-card">
-                <img src="images/event1.jpg" alt="Blood Camp">
-                <h3>Blood Donation Camp</h3>
-                <p>Organized at Central Women's University, with over 100 donors.</p>
+                <div class="event-slider">
+                    <img src="images/event1-1.jpeg" class="active">
+                    <img src="images/event1-2.jpeg">
+                     <img src="images/event1-3.jpeg">
+                </div>
+
+                <h3>Give Blood for Free, <br>Give Life with Love.</h3>
+
+                <p class="event-text">
+                    The Free Blood Donation Campaign at Yasin High School, Rajbari, organized in collaboration with the Bangladesh Red Crescent Society (BDRCS), Red Crescent Unit Rajbari, and Youth Red Crescent Rajbari Unit, reflects a strong commitment to humanity and community service. Through voluntary blood donation, this initiative aims to save lives, strengthen local blood reserves, and inspire compassion among the people of Rajbari.
+                </p>
+
+                <span class="see-more">See more..</span>
             </div>
 
             <div class="event-card">
-                <img src="images/event2.jpg" alt="Awareness Program">
-                <h3>Awareness Program</h3>
-                <p>Session on the importance of voluntary blood donation.</p>
+                <div class="event-slider">
+                    <img src="images/event2-1.jpeg" class="active">
+                    <img src="images/event2-2.jpeg">
+                    <img src="images/event2-3.jpeg">
+                    <img src="images/event2-4.jpeg">
+                </div>
+
+                <h3>Every Drop Counts — Together We Save Lives.</h3>
+
+                <p class="event-text">
+                    The Blood Donation Campaign 2025 reflects a shared commitment to compassion and public health. Organized through the collaboration of SCMST and Quantum Foundation Bangladesh, the initiative united students and staff in a collective effort to strengthen blood reserves and uphold humanitarian values. This campaign stands as a testament to responsible healthcare leadership and service to the community.
+                </p>
+
+                <span class="see-more">See more..</span>
+            </div>
+            <div class="event-card">
+                <div class="event-slider">
+                    <img src="images/event3-1.jpeg" class="active">
+                    <img src="images/event3-2.jpeg">
+                    <img src="images/event3-3.jpeg">
+                    <img src="images/event3-4.jpeg">
+                </div>
+
+                <h3>Build Roads, Save Lives — Donate Blood.</h3>
+
+                <p class="event-text">
+                    The Blood Donation Campaign organized by the Road Development Authority reflects our commitment beyond infrastructure—towards humanity. By coming together to donate blood, we are not only connecting roads but also connecting lives. A small act today can become someone’s lifeline tomorrow.
+                </p>
+
+                <span class="see-more">See more..</span>
             </div>
 
-            <div class="event-card">
-                <img src="images/event3.jpg" alt="Health Camp">
-                <h3>Health Camp</h3>
-                <p>Free health check-up and blood grouping event.</p>
-            </div>
         </div>
     </div>
 </section>
@@ -132,5 +198,33 @@
         </div>
     </div>
 </footer>
+
+
+<script>
+    // image rotation in the events
+document.querySelectorAll(".event-slider").forEach(slider => {
+    let images = slider.querySelectorAll("img");
+    let index = 0;
+
+    setInterval(() => {
+        images[index].classList.remove("active");
+        index = (index + 1) % images.length;
+        images[index].classList.add("active");
+    }, 2500);
+});
+
+// see more.. effects in the events
+document.querySelectorAll(".see-more").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const text = btn.previousElementSibling;
+
+        text.classList.toggle("expanded");
+        btn.innerText = text.classList.contains("expanded")
+            ? "See less"
+            : "See more..";
+    });
+});
+</script>
+
 </body>
 </html>
