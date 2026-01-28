@@ -175,6 +175,61 @@
 }
 
 
+/* Recent Events */
+#events {
+    padding: 80px 60px;
+    background: linear-gradient(to bottom, #fff5f5, #ffe9e9);
+}
+
+.events-container {
+    max-width: 1200px;
+    margin: auto;
+    text-align: center;
+}
+
+.section-title {
+    font-size: 36px;
+    color: #cc1a1a;
+    margin-bottom: 50px;
+}
+
+.event-cards {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.event-card {
+    width: 300px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 15px;
+    transition: transform 0.3s ease;
+}
+
+.event-card:hover {
+    transform: translateY(-8px);
+}
+
+.event-card img {
+    width: 100%;
+    border-radius: 12px;
+}
+
+.event-card h3 {
+    margin: 15px 0 10px;
+    color: #cc1a1a;
+}
+
+.event-card p {
+    font-size: 14px;
+    color: #555;
+}
+
+
+
 /* Blood Chart Section */
 #blood-chart {
     min-height: 650px;
