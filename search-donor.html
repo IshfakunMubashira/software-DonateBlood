@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DonateLife | Search Donor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    
+
+    <link rel="stylesheet" href="styles/search-donor.css">
+    <link rel="stylesheet" href="styles/navbar.css">
+    <link rel="stylesheet" href="styles/footer.css">
+</head>
+<body>
+
+    <nav>
+        <div class="logo">
+           <img src="images/footer-logo-removebg-preview.png" alt="">
+            <!-- <h1><span class="color_red">Donate</span>Life<span class="color_red"><i class="fa-solid fa-droplet"></i></span></h1> -->
+        </div>
+        <ul class="nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="search-donor.html">Search Doner</a></li>
+            <li><a href="">Blood Request</a></li>
+            <li><a href="donate-blood.html">Donate Blood</a></li>
+            <li><a href="">About Us</a></li>
+        </ul>
+    </nav>
+
+<section class="search-section">
+    <h2>Search Blood Donor</h2>
+
+    <div class="filters">
+        <input type="text" id="searchInput" placeholder="Search by name or area">
+
+        <select id="bloodFilter">
+            <option value="">All Blood Groups</option>
+            <option>A+</option><option>A-</option>
+            <option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option>
+            <option>O+</option><option>O-</option>
+        </select>
+
+        <select id="areaFilter">
+            <option value="">All Areas</option>
+            <option>Dhanmondi</option>
+            <option>Mirpur</option>
+            <option>Uttara</option>
+            <option>Banani</option>
+        </select>
+    </div>
+</section>
+
+<section class="donor-container">
+    <div class="donor-grid" id="donorGrid"></div>
+    <p class="no-result" id="noResult" style="display:none;">No eligible donors found.</p>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-box">
+        <img src="images/footer-logo-removebg-preview.png" alt="">
+        <h1>Donate Blood, Save Life</h1>
+    </div>
+
+    <div class="footer-box">
+        <h3>Important Links</h3>
+        <a href="index.html">Home</a>
+        <a href="">Search Doner</a>
+        <a href="">Blood Request</a>
+        <a href="donate-blood.html">Donate Blood</a>
+        <a href="">About Us</a>
+    </div>
+
+    <div class="footer-box">
+        <h3>Contact & Socials</h3>
+        <p>Phone: 01234567891</p>
+        <p>Email: donatelife@gmail.com</p>
+        <div class="socials">
+            <a href="#"><i class="fa-brands fa-facebook"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-twitter"></i></a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    const donors = [
+        {
+            name: "Rahim Ahmed",
+            blood: "O+",
+            gender: "Male",
+            age: 24,
+            area: "Dhanmondi",
+            phone: "01XXXXXXXXX",
+            email: "rahim@gmail.com",
+            lastDonationMonths: 4,
+            eligible: true,
+            img: "https://i.pravatar.cc/150?img=12"
+        },
+        {
+            name: "Nusrat Jahan",
+            blood: "A+",
+            gender: "Female",
+            age: 22,
+            area: "Mirpur",
+            phone: "01XXXXXXXXX",
+            email: "nusrat@gmail.com",
+            lastDonationMonths: 2,
+            eligible: true,
+            img: "https://i.pravatar.cc/150?img=47"
+        },
+        {
+            name: "Imran Khan",
+            blood: "B+",
+            gender: "Male",
+            age: 28,
+            area: "Uttara",
+            phone: "01XXXXXXXXX",
+            email: "imran@gmail.com",
+            lastDonationMonths: 6,
+            eligible: true,
+            img: "https://i.pravatar.cc/150?img=32"
+        }
+    ];
+
+    const grid = document.getElementById("donorGrid");
+    const noResult = document.getElementById("noResult");
+
+    function renderDonors() {
+        grid.innerHTML = "";
+        noResult.style.display = "none";
+
+        const search = searchInput.value.toLowerCase();
+        const blood = bloodFilter.value;
+        const area = areaFilter.value;
+
+        const filtered = donors.filter(d =>
+            d.eligible &&
+            d.lastDonationMonths >= 3 &&
+            (d.name.toLowerCase().includes(search) || d.area.toLowerCase().includes(search)) &&
+            (blood === "" || d.blood === blood) &&
+            (area === "" || d.area === area)
+        );
+
+        if (filtered.length === 0) {
+            noResult.style.display = "block";
+            return;
+        }
+
+        filtered.forEach(d => {
+            grid.innerHTML += `
+                <div class="donor-card">
+                    <img src="${d.img}">
+                    <h3>${d.name}</h3>
+                    <span class="blood">${d.blood}</span>
+
+                    <div class="donor-info">
+                        <p><strong>Gender:</strong> ${d.gender}</p>
+                        <p><strong>Age:</strong> ${d.age}</p>
+                        <p><strong>Area:</strong> ${d.area}</p>
+                        <p><strong>Phone:</strong> ${d.phone}</p>
+                        <p><strong>Email:</strong> ${d.email}</p>
+                    </div>
+
+                    <div class="contact-btns">
+                        <a class="call" href="tel:${d.phone}">
+                            <i class="fa-solid fa-phone"></i> Call
+                        </a>
+                        <a class="email" href="mailto:${d.email}">
+                            <i class="fa-solid fa-envelope"></i> Email
+                        </a>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    searchInput.addEventListener("input", renderDonors);
+    bloodFilter.addEventListener("change", renderDonors);
+    areaFilter.addEventListener("change", renderDonors);
+
+    renderDonors();
+</script>
+
+</body>
+</html>
