@@ -189,24 +189,79 @@
 }
 
 
-/* Missio and vision section */
-#mission-vision {
-    background: #fff0f2;
-    padding: 60px 20px;
+.guidelines-section {
+    background: #f9f9f9;
+    padding: 70px 20px;
+    font-family: 'Poppins', sans-serif;
 }
 
-.container {
-    max-width: 1000px;
+.guidelines-container {
+    max-width: 1100px;
     margin: auto;
-    text-align: center;
 }
 
-.header {
-    font-size: 36px;
-    font-weight: bold;
-    color: #d32f2f;
+.guidelines-header {
+    text-align: center;
     margin-bottom: 50px;
 }
+
+.guidelines-header h2 {
+    color: #c0392b;
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.guidelines-header p {
+    color: #555;
+    font-size: 15px;
+}
+
+.guidelines-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+.guideline-box {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.guideline-box h3 {
+    color: #c0392b;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+.guideline-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.guideline-item span {
+    background: #fdeaea;
+    color: #c0392b;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    height: fit-content;
+}
+
+.guideline-item p {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.guideline-item strong {
+    color: #c0392b;
+}
+
 
 
 
@@ -260,7 +315,13 @@
 }
 
 
-
+/* Missio and vision section */
+.header {
+    font-size: 36px;
+    font-weight: bold;
+    color: #d32f2f;
+    margin-bottom: 50px;
+}
 
 /* Mission & Vision Section */
 #mission-vision {
@@ -300,21 +361,6 @@
     box-shadow: 0 12px 30px rgba(0,0,0,0.12);
 }
 
-.terms-btn {
-    display: inline-block;
-    background: #d32f2f;
-    color: #fff;
-    text-decoration: none;
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-weight: bold;
-    transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.terms-btn:hover {
-    background: #b71c1c;
-    transform: translateY(-2px);
-}
 
 /* Responsive for smaller screens */
 @media(max-width: 768px){
