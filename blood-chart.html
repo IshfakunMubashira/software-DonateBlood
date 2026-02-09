@@ -6,6 +6,12 @@
 <title>Blood Type Compatibility</title>
 
 <style>
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
 :root {
     --red: #d90429;
     --dark: #2b2d42;
@@ -77,6 +83,19 @@ label {
 /* cells */
 .compat-cell {
     background: #f1f3f5;
+    position: relative; /* anchor for ::after */
+}
+
+.yes::after {
+    content: "✓";
+    color: var(--check);
+    font-size: 1.4rem;
+    font-weight: 700;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .compat-cell:hover {
@@ -84,11 +103,6 @@ label {
     border: 1px solid var(--red);
 }
 
-.yes::after {
-    content: "✓";
-    color: var(--check);
-    font-size: 1.2rem;
-}
 
 .no {
     opacity: 0.25;
@@ -109,6 +123,11 @@ label {
 #r-recipient:checked ~ .info-panel .d-recipient { display: block; border-color: var(--red); }
 #r-donor:checked ~ .info-panel .d-donor { display: block; border-color: var(--dark); }
 #r-om:checked ~ .info-panel .d-om { display: block; border-color: var(--check); }
+#r-abp:checked ~ .info-panel .d-abp {
+    display: block;
+    border-color: var(--check);
+}
+
 </style>
 </head>
 
@@ -120,6 +139,8 @@ label {
 <input type="radio" id="r-recipient" name="info" class="logic-gate">
 <input type="radio" id="r-donor" name="info" class="logic-gate">
 <input type="radio" id="r-om" name="info" class="logic-gate">
+<input type="radio" id="r-abp" name="info" class="logic-gate">
+
 
 <table>
 <thead>
@@ -130,10 +151,15 @@ label {
 </th>
 </tr>
 <tr>
-<th class="type-header">O−</th><th class="type-header">O+</th>
-<th class="type-header">A−</th><th class="type-header">A+</th>
-<th class="type-header">B−</th><th class="type-header">B+</th>
-<th class="type-header">AB−</th><th class="type-header">AB+</th>
+<th class="type-header"><label for="r-om">O−</label></th>
+<th class="type-header">O+</th>
+<th class="type-header">A−</th>
+<th class="type-header">A+</th>
+<th class="type-header">B−</th>
+<th class="type-header">B+</th>
+<th class="type-header">AB−</th>
+<th class="type-header"><label for="r-abp">AB+</label></th>
+
 </tr>
 </thead>
 
@@ -142,67 +168,99 @@ label {
 <th rowspan="8" class="donor-header">
 <label for="r-donor" style="writing-mode:vertical-rl;transform:rotate(180deg);">DONOR</label>
 </th>
-<th class="type-header">O−</th>
+<th class="type-header"><label for="r-om">O−</label></th>
 <td class="compat-cell yes"><label for="r-om"></label></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
 </tr>
 
 <tr>
 <th class="type-header">O+</th>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
 </tr>
 
 <tr>
 <th class="type-header">A−</th>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
 </tr>
 
 <tr>
 <th class="type-header">A+</th>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
 </tr>
 
 <tr>
 <th class="type-header">B−</th>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
 </tr>
 
 <tr>
 <th class="type-header">B+</th>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
 </tr>
 
 <tr>
 <th class="type-header">AB−</th>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell yes"></td><td class="compat-cell yes"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
+<td class="compat-cell yes"></td>
 </tr>
 
 <tr>
-<th class="type-header">AB+</th>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell no"></td>
-<td class="compat-cell no"></td><td class="compat-cell yes"></td>
+<th class="type-header"><label for="r-abp">AB+</label></th>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell no"></td>
+<td class="compat-cell yes"></td>
 </tr>
 </tbody>
 </table>
@@ -227,6 +285,17 @@ label {
 <p>O− blood can be given to anyone in emergencies.</p>
 <label for="r-default" style="color:blue;cursor:pointer;">Back</label>
 </div>
+
+<div class="desc d-abp">
+<h3 style="color:var(--check)">AB+ Universal Recipient</h3>
+<p>
+AB+ blood has both A and B antigens and Rh factor,
+so it can receive red blood cells from all blood groups.
+</p>
+<label for="r-default" style="color:blue;cursor:pointer;">Back</label>
+</div>
+
+
 </div>
 </div>
 </body>
