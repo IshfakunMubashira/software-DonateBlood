@@ -4,9 +4,9 @@
     box-sizing: border-box;
 }
 
-body {
+.blood-bank-container,
+.bb-chart {
     font-family: Arial, sans-serif;
-    background: #f6f7fb;
     color: #333;
 }
 
@@ -16,7 +16,7 @@ body {
     padding: 40px 20px;
 }
 
-h1 {
+.section-heading {
     text-align: center;
     color: #c1121f;
 }
@@ -220,6 +220,9 @@ h1 {
     font-size: 22px;
     font-weight: 700;
     color: #2b2d42;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f7f8f9;
+    color: var(--dark);
 }
 
 /* blood chart */
@@ -229,23 +232,6 @@ h1 {
     --gray: #8d99ae;
     --light: #edf2f4;
     --check: #2a9d8f;
-}
-
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #f8f9fa;
-    /* padding: 40px; */
-    color: var(--dark);
-}
-
-.container {
-    max-width: 720px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-    border: 2px solid black;
 }
 
 /* logic radios */

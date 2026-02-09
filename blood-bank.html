@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Main CSS -->
-    <link rel="stylesheet" href="styles/blood-bank.css">
     <link rel="stylesheet" href="styles/navbar.css">
     <link rel="stylesheet" href="styles/footer.css">
+    <link rel="stylesheet" href="styles/blood-bank.css">
+
 </head>
 <body>
 
     <nav>
         <div class="logo">
            <img src="images/footer-logo-removebg-preview.png" alt="">
-            <!-- <h1><span class="color_red">Donate</span>Life<span class="color_red"><i class="fa-solid fa-droplet"></i></span></h1> -->
         </div>
         <ul class="nav">
             <li><a href="index.html">Home</a></li>
@@ -30,7 +30,7 @@
     <!-- ================= Blood Bank Section ================= -->
     <section class="blood-bank-container">
 
-        <h1>Blood Bank</h1>
+        <h1 class="section-heading">Blood Bank</h1>
         <p class="subtitle">
             Check available blood groups and request blood when needed.
         </p>
@@ -187,12 +187,14 @@
 <table>
 <thead>
 <tr>
-<th rowspan="2" colspan="2"></th>
+<th rowspan="2" colspan="1"></th>
+<th></th>
 <th colspan="8" class="recipient-header">
 <label for="r-recipient">RECIPIENT</label>
 </th>
 </tr>
 <tr>
+    <th class="type-header" style="color: black;">Blood <br>Type</th>
 <th class="type-header"><label for="r-om">O−</label></th>
 <th class="type-header">O+</th>
 <th class="type-header">A−</th>

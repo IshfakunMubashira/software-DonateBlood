@@ -12,7 +12,7 @@
             --gray: #8d99ae;
         }
 
-        body {
+        .donor-container, .search-section {
             margin: 0;
             font-family: Arial, sans-serif;
             background: #f8f9fa;
