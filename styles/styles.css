@@ -125,6 +125,7 @@
     height: 50px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .banner .slogan a{
@@ -379,7 +380,7 @@
 /* Recent Events */
 #events {
     padding: 80px 60px;
-    background: linear-gradient(to bottom, #fff5f5, #ffe9e9);
+    background: linear-gradient(to bottom, #ffffff, #ffe9e9);
 }
 
 .events-container {
