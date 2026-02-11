@@ -69,42 +69,32 @@
 
 
 /* Banner layout*/
+/* Banner layout */
 .banner {
-    position: relative;
     height: 600px;
     padding: 80px 10%;
-    overflow: hidden;
 
     display: flex;
-    justify-content: flex-end;   /*Changed the alignment*/
+    justify-content: space-between;
     align-items: center;
+    gap: 60px;
+
+    /* Light → Red Gradient (Left → Right) */
+    background: linear-gradient(to right, #ffe6e6, #cc1a1a);
 }
 
-.bg-video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    min-width: 100%;
-    min-height: 100%;
-    transform: translate(-50%, -50%);
-    object-fit: cover;
-    z-index: 1;
+.banner-video {
+    flex: 1;
 }
 
-.video-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        rgba(129, 4, 4, 0.55),
-        rgba(136, 13, 13, 0.55)
-    );
-    z-index: 2;
+.banner-video video {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px;
+    background-color: #e77070;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
-.banner .slogan {
-    position: relative;
-    z-index: 3;
-}
 
 
 
@@ -159,12 +149,6 @@
     }
 }
 
-/* Icon animation */
-.animation i {
-    font-size: 120px;
-    color: #cc1a1a; /* keep your red shade */
-    animation: pulse 1.5s infinite;
-}
 
 @keyframes pulse {
     0% {
