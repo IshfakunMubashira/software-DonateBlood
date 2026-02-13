@@ -1,0 +1,219 @@
+/* Matching your exact site colors */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f4f4f4;
+}
+
+.logo h1{
+    font-size: 45px;
+    color: white;
+    text-shadow: -1px -1px 3px #363636;
+    background-color: #dfdfdf8a;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.color_red
+{
+    color: #cc1a1a;
+    font-weight: 900;
+}
+
+nav{
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    /* border: 1px solid black; */
+    background-color: #fc9c9c96;
+    height: 120px;
+}
+
+nav .nav{
+    display: flex;
+    list-style-type: none;
+    gap: 51px;
+    align-items: center;
+    /* border: 1px solid black; */
+}
+
+nav .nav a{
+    font-size: 20px;
+    color: white;
+    text-decoration: none;
+}
+
+
+nav .nav li{
+    border: 1px solid rgb(255, 255, 255);
+    border-radius: 15px;
+    padding: 20px;
+    background-color: #cc1a1a;
+}
+
+nav .nav li:hover{
+    color: #cc1a1a;
+    background-color: #ffffffec;
+    border: 1px solid #cc1a1a;
+    border: none;
+    border-radius: 20px;
+    padding: 20px;
+}
+
+nav .nav li:hover a {
+    color: #cc1a1a;
+}
+
+nav .logo img{
+    height: 50px; 
+    width: auto;
+    display: block;   
+}
+/* Content Layout */
+.main-container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+/* Form Design */
+.form-wrapper {
+    background: #fff;
+    padding: 30px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
+}
+
+.form-wrapper h2 { color: #cc1a1a; margin-bottom: 20px; text-align: center; }
+
+.box { margin-bottom: 15px; }
+.box label { display: block; margin-bottom: 5px; font-weight: bold; }
+.box input, .box select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.req-btn {
+    width: 100%;
+    padding: 12px;
+    background: #cc1a1a;
+    color: white;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.req-btn:hover { background: #cc0000; }
+
+/* Posts Design */
+.blood-card {
+    background: #ffffff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border-left: 8px solid #cc1a1a; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-family: 'Arial', sans-serif;
+}
+
+.card-head {
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 12px;
+}
+
+.group { 
+    background: #cc1a1a; 
+    color: white; 
+    padding: 5px 12px; 
+    font-weight: bold; 
+    border-radius: 4px; 
+    margin-right: 15px;
+    font-size: 18px;
+}
+
+.card-head strong {
+    font-size: 18px;
+    color: #333;
+}
+
+.card-details p {
+    margin: 6px 0;
+    color: #444;
+    line-height: 1.4;
+}
+
+.call { 
+    color: #d32f2f; 
+    font-weight: bold; 
+    font-size: 16px;
+    display: block;
+    margin-top: 8px;
+}
+
+.card-time { 
+    font-size: 11px; 
+    color: #777; 
+    margin-top: 15px; 
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+}
+
+
+/* Footer section */
+.footer {
+    background-color: #cc1a1a;
+    color: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 60px;
+    
+    height: 350px;
+}
+
+
+.footer-box h3 {
+    margin-bottom: 10px;
+    font-size: 30px;
+    /* border: 1px solid white; */
+}
+
+.footer-box h1{
+    font-size: 28px;
+    margin-top: 30px;
+    font-style:italic;
+}
+
+.footer-box img{
+    padding-top: 0;
+    width: 45%;
+    border: 1px solid white;
+}
+
+.footer-box a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    margin-bottom: 8px;
+}
+
+.footer .socials {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    padding-left: 20px;
+}
+
+.footer .socials i {
+    font-size: 22px;
+    color: white;
+}
