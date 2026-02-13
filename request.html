@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DonateLife</title>
+    <link rel="stylesheet" href="styles/blood-request.css">
+    <link rel="stylesheet" href="styles/navbar.css">
+    <link rel="stylesheet" href="styles/footer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+     <nav>
+        <div class="logo">
+           <img src="images/footer-logo-removebg-preview.png" alt="">
+            <!-- <h1><span class="color_red">Donate</span>Life<span class="color_red"><i class="fa-solid fa-droplet"></i></span></h1> -->
+        </div>
+        <ul class="nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="blood-bank.html">Blood Bank</a></li>
+            <li><a href="search-donor.html">Search Doner</a></li>
+            <li><a href="">Blood Request</a></li>
+            <li><a href="donate-blood.html">Donate Blood</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-container">
+        <section class="form-wrapper">
+            <h2><i class="fa-solid fa-droplet"></i> Post Blood Request</h2>
+            <form id="bloodForm">
+                <div class="box">
+                    <label>Patient Name</label>
+                    <input type="text" id="patientName" placeholder="Enter patient's name" required>
+                </div>
+                <div class="box">
+                    <label>Blood Group</label>
+                    <select id="bloodGroup" required>
+                        <option value="">-- Choose Group --</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+                <div class="box">
+                   <label>How Many Bags Needed</label>
+                   <input type="number" id="bags" placeholder="Enter number of bags" min="1" required>
+                </div>
+                <div class="box">
+                    <label>Location/Hospital</label>
+                    <input type="text" id="hospital" placeholder="Hospital Name & City" required>
+                </div>
+                <div class="box">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="phone" placeholder="01XXXXXXXXX" required>
+
+                </div>
+                <button type="submit" class="req-btn">SUBMIT REQUEST</button>
+            </form>
+        </section>
+         <section class="posts-section">
+            <div id="postsDisplay">
+                </div>
+         </section>
+    </div>
+    <script>
+    const bloodForm = document.getElementById('bloodForm');
+    const postsDisplay = document.getElementById('postsDisplay');
+
+    bloodForm.addEventListener('submit', function(e) {
+        e.preventDefault(); 
+        const name = document.getElementById('patientName').value;
+        const group = document.getElementById('bloodGroup').value;
+        const bags = document.getElementById('bags').value;
+        const hospital = document.getElementById('hospital').value;
+        const phone = document.getElementById('phone').value;
+        const time = new Date().toLocaleString();
+
+        const postHTML = `
+            <div class="blood-card">
+                <div class="card-head">
+                    <span class="group">${group}</span>
+                    <strong>${name}</strong>
+                </div>
+                <div class="card-details">
+                    <p><strong>Bags:</strong> ${bags} | <strong>Hospital:</strong> ${hospital}</p>
+                    <p class="call"><i class="fa-solid fa-phone"></i> ${phone}</p>
+                </div>
+                <div class="card-time">Posted on: ${time}</div>
+            </div>
+        `;
+
+        postsDisplay.insertAdjacentHTML('afterbegin', postHTML);
+
+        bloodForm.reset();
+    });
+</script>
+
+   <footer class="footer">
+    <div class="footer-box">
+        <img src="images/footer-logo.jpeg" alt="">
+        <h1>Donate Blood, Save Life</h1>
+    </div>
+
+    <div class="footer-box">
+        <h3>Important Links</h3>
+        <a href="index.html">Home</a>
+        <a href="search-donor.html">Search Doner</a>
+        <a href="">Blood Request</a>
+        <a href="donate-blood.html">Donate Blood</a>
+        <a href="">About Us</a>
+    </div>
+
+    <div class="footer-box">
+        <h3>Contact & Socials</h3>
+        <p>Phone: 01234567891</p>
+        <p>Email: donatelife@gmail.com</p>
+        <div class="socials">
+            <a href="#"><i class="fa-brands fa-facebook"></i></a>
+            <a href="#"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#"><i class="fa-brands fa-twitter"></i></a>
+        </div>
+    </div>
+</footer>
+
+
+<script>
+    // image rotation in the events
+document.querySelectorAll(".event-slider").forEach(slider => {
+    let images = slider.querySelectorAll("img");
+    let index = 0;
+
+    setInterval(() => {
+        images[index].classList.remove("active");
+        index = (index + 1) % images.length;
+        images[index].classList.add("active");
+    }, 2500);
+});
+
+// see more.. effects in the events
+document.querySelectorAll(".see-more").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const text = btn.previousElementSibling;
+
+        text.classList.toggle("expanded");
+        btn.innerText = text.classList.contains("expanded")
+            ? "See less"
+            : "See more..";
+    });
+});
+</script>
+
+</body>
+
+</html>
+
