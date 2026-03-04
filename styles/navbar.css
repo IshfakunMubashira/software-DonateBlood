@@ -17,6 +17,7 @@ nav{
     /* border: 1px solid black; */
     background-color: #fc9c9c96;
     height: 140px;
+    font-family: Arial, sans-serif;
 }
 
 nav .nav{
@@ -50,7 +51,7 @@ nav .nav li:hover{
     padding: 20px;
 }
 
-nav .nav li:hover a {
+nav .nav li:hover a{
     color: #cc1a1a;
 }
 
