@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DonateLife | Admin Dashboard</title>
+    <link rel="shortcut icon" href="images/favicon.png">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles/admin.css">
+    <link rel="stylesheet" href="styles/navbar.css">
+    <link rel="stylesheet" href="styles/footer.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js"></script>
+</head>
+<body>
+    <!-- NAVBAR (slightly modified for admin) -->
+    <nav>
+        <div class="logo">
+            <img src="images/2.png" alt="DonateLife">
+        </div>
+        <!-- <ul class="nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="blood-bank.html">Blood Bank</a></li>
+            <li><a href="search-donor.html">Search Donor</a></li>
+            <li><a href="request.html">Blood Request</a></li>
+            <li><a href="donate-blood.html">Donate Blood</a></li>
+        </ul> -->
+        <div class="admin-user" id="adminUser">
+            <span id="adminEmail">Loading...</span>
+            <div class="stat-icon" style="background: rgba(255, 0, 0, 0.366)">
+                <i class="fa-regular fa-circle-user" style="color: #4d4a4a;"></i>
+            </div>
+            
+            <button id="logoutBtn" class="logout-btn"><i class="fa-solid fa-sign-out-alt"></i></button>
+        </div>
+    </nav>
+
+    <!-- MAIN ADMIN CONTAINER -->
+    <div class="admin-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-droplet" style="color: #cc1a1a;"></i> DonateLife</h2>
+                <p>Admin Dashboard</p>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li data-tab="donors">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Donors</span>
+                    <span class="badge" id="donorsBadge">0</span>
+                </li>
+                <li data-tab="requests">
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                    <span>Blood Requests</span>
+                    <span class="badge" id="requestsBadge">0</span>
+                </li>
+                <li data-tab="inventory">
+                    <i class="fa-solid fa-boxes"></i>
+                    <span>Inventory</span>
+                </li>
+                <li data-tab="events">
+                    <i class="fa-solid fa-calendar"></i>
+                    <span>Events</span>
+                </li>
+                <li data-tab="admins">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Admins</span>
+                </li>
+                <li data-tab="settings">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <p><i class="fa-regular fa-clock"></i> Last updated: <span id="lastUpdated">Just now</span></p>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content" id="mainContent">
+            
+            <!-- LOGIN SECTION (shown when not authenticated) -->
+            <div id="loginSection" class="login-section">
+                <div class="login-card">
+                    <div class="login-header">
+                        <i class="fa-solid fa-droplet"></i>
+                        <h2>Admin Login</h2>
+                        <p>Enter your credentials to access the dashboard</p>
+                    </div>
+                    
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label><i class="fa-regular fa-envelope"></i> Email</label>
+                            <input type="email" id="loginEmail" placeholder="admin@donatelife.org" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-lock"></i> Password</label>
+                            <input type="password" id="loginPassword" placeholder="••••••••" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button type="submit" class="login-btn">
+                                <i class="fa-solid fa-right-to-bracket"></i> Login
+                            </button>
+                        </div>
+                        
+                        <div id="loginError" class="error-message"></div>
+                    </form>
+                    
+                    <div class="login-footer">
+                        <p>Demo: admin@donatelife.org / admin123</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD TAB -->
+            <div id="dashboard" class="tab-content active">
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
+                    <div class="date-display">
+                        <i class="fa-regular fa-calendar"></i> 
+                        <span id="currentDate"></span>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(204, 26, 26, 0.1);">
+                            <i class="fa-solid fa-users" style="color: #cc1a1a;"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Donors</h3>
+                            <p class="stat-number" id="totalDonors">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(52, 152, 219, 0.1);">
+                            <i class="fa-solid fa-hand-holding-heart" style="color: #3498db;"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Pending Requests</h3>
+                            <p class="stat-number" id="pendingRequests">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(46, 204, 113, 0.1);">
+                            <i class="fa-solid fa-boxes" style="color: #2ecc71;"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Blood Bags</h3>
+                            <p class="stat-number" id="totalBags">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(155, 89, 182, 0.1);">
+                            <i class="fa-solid fa-calendar-check" style="color: #9b59b6;"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Upcoming Events</h3>
+                            <p class="stat-number" id="upcomingEvents">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-clock"></i> Recent Donors</h3>
+                            <a href="#" class="view-all" data-tab="donors">View All <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                        <div class="card-body" id="recentDonors">
+                            <!-- Populated by JS -->
+                            <div class="loading">Loading...</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-hand-holding-heart"></i> Recent Requests</h3>
+                            <a href="#" class="view-all" data-tab="requests">View All <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                        <div class="card-body" id="recentRequests">
+                            <!-- Populated by JS -->
+                            <div class="loading">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blood Inventory Chart -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-simple"></i> Blood Inventory Overview</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="inventory-bars" id="inventoryBars">
+                            <!-- Populated by JS -->
+                            <div class="loading">Loading inventory...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DONORS TAB -->
+            <div id="donors" class="tab-content">
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-users"></i> Donor Management</h1>
+                    <div class="header-actions">
+                        <button class="btn-refresh" onclick="loadDonors()">
+                            <i class="fa-solid fa-rotate"></i> Refresh
+                        </button>
+                        <button class="btn-export" onclick="exportDonors()">
+                            <i class="fa-solid fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <input type="text" id="donorSearch" placeholder="Search by name, phone or area...">
+                    <select id="donorBloodFilter">
+                        <option value="">All Blood Groups</option>
+                        <option>A+</option><option>A-</option>
+                        <option>B+</option><option>B-</option>
+                        <option>AB+</option><option>AB-</option>
+                        <option>O+</option><option>O-</option>
+                    </select>
+                    <select id="donorEligibleFilter">
+                        <option value="">All Status</option>
+                        <option value="true">Eligible</option>
+                        <option value="false">Ineligible</option>
+                    </select>
+                </div>
+
+                <!-- Donors Table -->
+                <div class="table-container">
+                    <table class="data-table" id="donorsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Blood Group</th>
+                                <th>Age/Gender</th>
+                                <th>Area</th>
+                                <th>Contact</th>
+                                <th>Last Donation</th>
+                                <th>Eligible</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donorsTableBody">
+                            <tr><td colspan="8" class="loading">Loading donors...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- REQUESTS TAB -->
+            <div id="requests" class="tab-content">
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-hand-holding-heart"></i> Blood Requests</h1>
+                    <div class="header-actions">
+                        <button class="btn-refresh" onclick="loadRequests()">
+                            <i class="fa-solid fa-rotate"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Filters -->
+                <div class="filters-bar">
+                    <select id="requestStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="fulfilled">Fulfilled</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                    <select id="requestBloodFilter">
+                        <option value="">All Blood Groups</option>
+                        <option>A+</option><option>A-</option>
+                        <option>B+</option><option>B-</option>
+                        <option>AB+</option><option>AB-</option>
+                        <option>O+</option><option>O-</option>
+                    </select>
+                </div>
+
+                <!-- Requests Table -->
+                <div class="table-container">
+                    <table class="data-table" id="requestsTable">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Blood Group</th>
+                                <th>Bags</th>
+                                <th>Hospital</th>
+                                <th>Contact</th>
+                                <th>Needed By</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody">
+                            <tr><td colspan="8" class="loading">Loading requests...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- INVENTORY TAB -->
+            <div id="inventory" class="tab-content">
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-boxes"></i> Blood Inventory</h1>
+                    <button class="btn-primary" onclick="openInventoryModal()">
+                        <i class="fa-solid fa-plus"></i> Update Inventory
+                    </button>
+                </div>
+
+                <!-- Inventory Grid -->
+                <div class="inventory-grid" id="inventoryGrid">
+                    <!-- Populated by JS -->
+                    <div class="loading">Loading inventory...</div>
+                </div>
+
+                <!-- Inventory History (optional) -->
+                <div class="dashboard-card" style="margin-top: 30px;">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Updates</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="inventory-history" id="inventoryHistory">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EVENTS TAB -->
+            <div id="events" class="tab-content">
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-calendar"></i> Events Management</h1>
+                    <button class="btn-primary" onclick="openEventModal()">
+                        <i class="fa-solid fa-plus"></i> Add New Event
+                    </button>
+                </div>
+
+                <!-- Events Grid -->
+                <div class="events-grid" id="eventsGrid">
+                    <!-- Populated by JS -->
+                    <div class="loading">Loading events...</div>
+                </div>
+            </div>
+
+            <!-- ADMINS TAB -->
+            <div id="admins" class="tab-content">
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-user-shield"></i> Admin Management</h1>
+                    <button class="btn-primary" onclick="openAdminModal()">
+                        <i class="fa-solid fa-plus"></i> Add Admin
+                    </button>
+                </div>
+
+                <!-- Admins Table -->
+                <div class="table-container">
+                    <table class="data-table" id="adminsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Last Login</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminsTableBody">
+                            <tr><td colspan="6" class="loading">Loading admins...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div id="settings" class="tab-content">
+                <div class="content-header">
+                    <h1><i class="fa-solid fa-gear"></i> Site Settings</h1>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- General Settings -->
+                    <div class="settings-card">
+                        <h3>General Settings</h3>
+                        <form id="generalSettingsForm">
+                            <div class="form-group">
+                                <label>Site Name</label>
+                                <input type="text" id="siteName" value="DonateLife">
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Email</label>
+                                <input type="email" id="contactEmail" value="donatelife2026@gmail.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Phone</label>
+                                <input type="text" id="contactPhone" value="01234567891">
+                            </div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea id="address" rows="2">Dhaka, Bangladesh</textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- Social Media Links -->
+                    <div class="settings-card">
+                        <h3>Social Media</h3>
+                        <form id="socialSettingsForm">
+                            <div class="form-group">
+                                <label><i class="fa-brands fa-facebook"></i> Facebook</label>
+                                <input type="url" id="facebookUrl" value="#">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-brands fa-instagram"></i> Instagram</label>
+                                <input type="url" id="instagramUrl" value="#">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fa-brands fa-twitter"></i> Twitter</label>
+                                <input type="url" id="twitterUrl" value="#">
+                            </div>
+                            <button type="submit" class="btn-primary">Update Links</button>
+                        </form>
+                    </div>
+
+                    <!-- Guidelines -->
+                    <div class="settings-card">
+                        <h3>Donation Guidelines</h3>
+                        <form id="guidelinesForm">
+                            <div class="form-group">
+                                <label>Donor Guidelines</label>
+                                <textarea id="donorGuidelines" rows="4">• Age 18–60 years
+• Weight at least 45 kg
+• Healthy and free from infectious diseases
+• Minimum 3–4 months gap between donations</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Recipient Guidelines</label>
+                                <textarea id="recipientGuidelines" rows="4">• Verify blood group at hospital
+• Respect donor privacy
+• No harassment of donors
+• Genuine requests only</textarea>
+                            </div>
+                            <button type="submit" class="btn-primary">Update Guidelines</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Inventory Update Modal -->
+    <div id="inventoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeInventoryModal()">&times;</span>
+            <h2>Update Blood Inventory</h2>
+            <form id="inventoryForm">
+                <div class="form-group">
+                    <label>Blood Group</label>
+                    <select id="inventoryBloodGroup" required>
+                        <option value="">Select Blood Group</option>
+                        <option>A+</option><option>A-</option>
+                        <option>B+</option><option>B-</option>
+                        <option>AB+</option><option>AB-</option>
+                        <option>O+</option><option>O-</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Number of Bags</label>
+                    <input type="number" id="inventoryBags" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <textarea id="inventoryNotes" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn-primary">Update Inventory</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content modal-lg">
+            <span class="close-btn" onclick="closeEventModal()">&times;</span>
+            <h2><i class="fa-solid fa-calendar-plus"></i> Add/Edit Event</h2>
+            <form id="eventForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Event Title</label>
+                        <input type="text" id="eventTitle" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="eventDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <input type="text" id="eventTime" placeholder="10:00 AM – 4:00 PM" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="eventLocation" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="eventDescription" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Event Images</label>
+                    <input type="file" id="eventImages" multiple accept="image/*">
+                    <small>You can select multiple images (JPEG, PNG)</small>
+                </div>
+
+                <div id="existingImages" class="existing-images"></div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn-primary">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeAdminModal()">&times;</span>
+            <h2>Add New Admin</h2>
+            <form id="adminForm">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="adminName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="adminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="adminRole" required>
+                        <option value="editor">Editor</option>
+                        <option value="super_admin">Super Admin</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Temporary Password</label>
+                    <input type="text" id="adminPassword" value="donate@123" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn-primary">Add Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-box">
+            <img src="images/logo.png" alt="">
+            <h1>Donate Blood, Save Life</h1>
+        </div>
+
+        <div class="footer-box">
+            <h3>Important Links</h3>
+            <a href="index.html">Home</a>
+            <a href="search-donor.html">Search Donor</a>
+            <a href="request.html">Blood Request</a>
+            <a href="donate-blood.html">Donate Blood</a>
+            <a href="admin.html">Admin</a>
+        </div>
+
+        <div class="footer-box">
+            <h3>Contact & Socials</h3>
+            <p>Phone: 01234567891</p>
+            <p>Email: donatelife2026@gmail.com</p>
+            <div class="socials">
+                <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 DonateLife. All Rights Reserved. | Admin Panel v1.0</p>
+        </div>
+    </footer>
+
+    <!-- Main Admin JavaScript -->
+    <script type="module" src="scripts/admin.js"></script>
+</body>
+</html>
