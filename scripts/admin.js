@@ -1,18 +1,5 @@
 // admin.js - Complete Firebase Integration for DonateLife Admin Panel
 
-// ==================== FIREBASE CONFIGURATION ====================
-// Replace this with your actual Firebase config from Firebase Console
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyB4kQdzuZu-at1TtlN_db9HNTHre734mq0",
-  authDomain: "donatelife-daf28.firebaseapp.com",
-  projectId: "donatelife-daf28",
-  storageBucket: "donatelife-daf28.firebasestorage.app",
-  messagingSenderId: "544833489737",
-  appId: "1:544833489737:web:4021902b192fe4bddce898",
-  measurementId: "G-54ZVELBSGY"
-};
-
 // Initialize Firebase
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
 import { 
@@ -30,6 +17,7 @@ import {
     doc, 
     updateDoc, 
     deleteDoc, 
+    setDoc,  
     query, 
     where, 
     orderBy, 
@@ -45,6 +33,20 @@ import {
     getDownloadURL,
     deleteObject
 } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js';
+
+
+// ==================== FIREBASE CONFIGURATION ====================
+// Replace this with your actual Firebase config from Firebase Console
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB4kQdzuZu-at1TtlN_db9HNTHre734mq0",
+  authDomain: "donatelife-daf28.firebaseapp.com",
+  projectId: "donatelife-daf28",
+  storageBucket: "donatelife-daf28.firebasestorage.app",
+  messagingSenderId: "544833489737",
+  appId: "1:544833489737:web:4021902b192fe4bddce898",
+  measurementId: "G-54ZVELBSGY"
+};
 
 // Initialize Firebase services
 const app = initializeApp(firebaseConfig);
@@ -70,7 +72,7 @@ let eventsUnsubscribe = null;
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        document.getElementById('adminEmail').textContent = user.email;
+        // document.getElementById('adminEmail').textContent = user.email;
         
         // Check if user is admin
         const isAdmin = await checkAdminStatus(user.email);
@@ -132,11 +134,23 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 async function checkAdminStatus(email) {
     try {
         const adminDoc = await getDoc(doc(db, 'admins', email));
+
         if (adminDoc.exists()) {
-            currentAdminRole = adminDoc.data().role || 'viewer';
+            const adminData = adminDoc.data();
+
+            currentAdminRole = adminData.role || 'viewer';
+
+            // Show admin name in navbar
+            const adminNameElement = document.getElementById('adminName');
+            if (adminNameElement) {
+                adminNameElement.textContent = adminData.name || email;
+            }
+
             return true;
         }
+
         return false;
+
     } catch (error) {
         console.error('Error checking admin status:', error);
         return false;

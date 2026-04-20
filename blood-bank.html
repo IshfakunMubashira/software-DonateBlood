@@ -5,469 +5,247 @@
     <title>DonateLife | Blood Bank</title>
     <link rel="shortcut icon" href="images/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <!-- Main CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="styles/navbar.css">
     <link rel="stylesheet" href="styles/footer.css">
     <link rel="stylesheet" href="styles/blood-bank.css">
-
 </head>
 <body>
 
-    <nav>
-        <div class="logo">
-           <img src="images/logo (2).png" alt="">
+<nav>
+    <div class="logo"><img src="images/logo (2).png" alt=""></div>
+    <ul class="nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="blood-bank.html">Blood Bank</a></li>
+        <li><a href="search-donor.html">Search Doner</a></li>
+        <li><a href="request.html">Blood Request</a></li>
+        <li><a href="donate-blood.html">Donate Blood</a></li>
+    </ul>
+</nav>
+
+<section class="blood-bank-container">
+    <h1 class="section-heading">Blood Bank</h1>
+    <p class="subtitle">Check available blood groups and request blood when needed.</p>
+
+    <div class="filter-section">
+        <h3>Filter Blood Availability</h3>
+        <div class="filter-controls">
+            <select id="bloodFilter">
+                <option value="all">All Blood Groups</option>
+                <option value="A+">A+</option><option value="A-">A-</option>
+                <option value="B+">B+</option><option value="B-">B-</option>
+                <option value="O+">O+</option><option value="O-">O-</option>
+                <option value="AB+">AB+</option><option value="AB-">AB-</option>
+            </select>
         </div>
-        <ul class="nav">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="blood-bank.html">Blood Bank</a></li>
-            <li><a href="search-donor.html">Search Doner</a></li>
-            <li><a href="request.html">Blood Request</a></li>
-            <li><a href="donate-blood.html">Donate Blood</a></li>
-        </ul>
-    </nav>
-
-
-    <!-- ================= Blood Bank Section ================= -->
-    <section class="blood-bank-container">
-
-        <h1 class="section-heading">Blood Bank</h1>
-        <p class="subtitle">
-            Check available blood groups and request blood when needed.
-        </p>
-
-        <!-- ================= Filter ================= -->
-<div class="filter-section">
-    <h3>Filter Blood Availability</h3>
-
-    <div class="filter-controls">
-        <!-- <label for="bloodFilter">Blood Group</label> -->
-        <select id="bloodFilter">
-            <option value="all">All Blood Groups</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-        </select>
     </div>
-</div>
 
+    <div class="notice-box">
+        <h3>Important Notice</h3>
+        <ul>
+            <li>The recipient must bear the cost of the blood bag, needle, and storage equipment.</li>
+            <li>If a bag of blood is received, a family member or friend must donate one bag of blood in return.</li>
+            <li>Blood is provided based on availability and medical urgency.</li>
+        </ul>
+    </div>
 
+    <p id="invLoading" style="text-align:center;color:#888;padding:20px;">Loading inventory…</p>
+    <div class="blood-card-grid" id="bloodCardGrid"></div>
+</section>
 
-        <!-- ================= Notice ================= -->
-        <div class="notice-box">
-            <h3>Important Notice</h3>
-            <ul>
-                <li>The recipient must bear the cost of the blood bag, needle, and storage equipment.</li>
-                <li>If a bag of blood is received, a family member or friend must donate one bag of blood in return.</li>
-                <li>Blood is provided based on availability and medical urgency.</li>
-            </ul>
-        </div>
-
-
-        <!-- ================= Blood Group Cards ================= -->
-        <div class="blood-card-grid">
-
-            <div class="blood-card" data-group="A+">
-                <h2>A+</h2>
-                <p class="count">Available Bags: <strong>12</strong></p>
-                <button class="request-btn" data-blood="A+">Request Blood</button>
-            </div>
-
-            <div class="blood-card" data-group="A-">
-                <h2>A-</h2>
-                <p class="count">Available Bags: <strong>1</strong></p>
-                <button class="request-btn" data-blood="A-">Request Blood</button>
-            </div>
-
-            <div class="blood-card" data-group="B+">
-                <h2>B+</h2>
-                <p class="count">Available Bags: <strong>13</strong></p>
-                <button class="request-btn" data-blood="B+">Request Blood</button>
-            </div>
-
-            <div class="blood-card" data-group="B-">
-                <h2>B-</h2>
-                <p class="count">Available Bags: <strong>0</strong></p>
-                <button class="request-btn" data-blood="B-">Request Blood</button>
-            </div>
-
-            <div class="blood-card" data-group="O+">
-                <h2>O+</h2>
-                <p class="count">Available Bags: <strong>8</strong></p>
-                <button class="request-btn" data-blood="O+">Request Blood</button>
-            </div>
-
-            <div class="blood-card" data-group="O-">
-                <h2>O-</h2>
-                <p class="count">Available Bags: <strong>0</strong></p>
-                <button class="request-btn" data-blood="O-">Request Blood</button>
-            </div>
-
-            <div class="blood-card" data-group="AB+">
-                <h2>AB+</h2>
-                <p class="count">Available Bags: <strong>6</strong></p>
-                <button class="request-btn" data-blood="AB+">Request Blood</button>
-            </div>
-
-            <div class="blood-card" data-group="AB-">
-                <h2>AB-</h2>
-                <p class="count">Available Bags: <strong>3</strong></p>
-                <button class="request-btn" data-blood="AB-">Request Blood</button>
-            </div>
-
-            <!-- add more cards as needed -->
-
-        </div>
-
-
-<!-- ================= Request Form Modal ================= -->
+<!-- Request Modal -->
 <div class="modal" id="requestModal">
     <div class="modal-content">
-
         <span class="close-btn" id="closeModal">&times;</span>
-
         <h2>Blood Bag Request Form</h2>
-
-        <form class="request-form">
-
-            <div class="form-group">
-                <label>Patient / Recipient Name</label>
-                <input type="text" required>
-            </div>
-
-            <div class="form-group">
-                <label>Contact Number</label>
-                <input type="tel" required>
-            </div>
-
-            <div class="form-group">
-                <label>Hospital Address</label>
-                <textarea rows="2" required></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>When Blood is Needed</label>
-                <input type="datetime-local" required>
-            </div>
-
-            <div class="form-group">
-                <label>Amount of Blood Needed (bags)</label>
-                <input type="number" min="1" required>
-            </div>
-
-            <div class="form-group">
-                <label>Blood Group Requested</label>
-                <input type="text" id="requestedBlood" readonly>
-            </div>
-
-            <div class="form-group">
-                <label>Blood Group You Will Donate in Return</label>
-                <select required>
+        <form class="request-form" id="bankRequestForm">
+            <div id="bankReqMsg" style="display:none;padding:12px;border-radius:5px;margin-bottom:14px;font-weight:600;"></div>
+            <div class="form-group"><label>Patient / Recipient Name</label><input type="text" id="reqPatient" required></div>
+            <div class="form-group"><label>Contact Number</label><input type="tel" id="reqPhone" required></div>
+            <div class="form-group"><label>Hospital Address</label><textarea rows="2" id="reqHospital" required></textarea></div>
+            <div class="form-group"><label>When Blood is Needed</label><input type="datetime-local" id="reqNeededBy" required></div>
+            <div class="form-group"><label>Amount of Blood Needed (bags)</label><input type="number" id="reqBags" min="1" required></div>
+            <div class="form-group"><label>Blood Group Requested</label><input type="text" id="requestedBlood" readonly></div>
+            <div class="form-group"><label>Blood Group You Will Donate in Return</label>
+                <select id="reqReturnGroup" required>
                     <option value="">Select</option>
-                    <option>A+</option>
-                    <option>A-</option>
-                    <option>B+</option>
-                    <option>B-</option>
-                    <option>O+</option>
-                    <option>O-</option>
-                    <option>AB+</option>
-                    <option>AB-</option>
+                    <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                    <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
                 </select>
             </div>
-
-            <div class="form-group">
-                <label>Doctor's Name</label>
-                <input type="text" required>
-            </div>
-
-            <div class="form-group">
-                <label>Doctor's Contact Number</label>
-                <input type="tel" required>
-            </div>
-
-            <button type="submit" class="submit-btn">
-                Submit Request
-            </button>
-
+            <div class="form-group"><label>Doctor's Name</label><input type="text" id="reqDoctor" required></div>
+            <div class="form-group"><label>Doctor's Contact Number</label><input type="tel" id="reqDoctorPhone" required></div>
+            <button type="submit" class="submit-btn" id="bankReqBtn">Submit Request</button>
         </form>
     </div>
 </div>
 
-
-    </section>
-
-<!-- =============== Blood Group Compatibility Chart ================= -->
+<!-- Blood Compatibility Chart (unchanged) -->
 <section id="bb-chart" class="bb-chart">
-
     <div class="bb-chart__container">
-
         <h2 class="bb-chart__title">Blood Type Compatibility</h2>
-
-<input type="radio" id="r-default" name="info" class="logic-gate" checked>
-<input type="radio" id="r-recipient" name="info" class="logic-gate">
-<input type="radio" id="r-donor" name="info" class="logic-gate">
-<input type="radio" id="r-om" name="info" class="logic-gate">
-<input type="radio" id="r-abp" name="info" class="logic-gate">
-
-
-<table>
-<thead>
-<tr>
-<th rowspan="2" colspan="1"></th>
-<th></th>
-<th colspan="8" class="recipient-header">
-<label for="r-recipient">RECIPIENT</label>
-</th>
-</tr>
-<tr>
-    <th class="type-header" style="color: black;">Blood <br>Type</th>
-<th class="type-header"><label for="r-om">O−</label></th>
-<th class="type-header">O+</th>
-<th class="type-header">A−</th>
-<th class="type-header">A+</th>
-<th class="type-header">B−</th>
-<th class="type-header">B+</th>
-<th class="type-header">AB−</th>
-<th class="type-header"><label for="r-abp">AB+</label></th>
-
-</tr>
-</thead>
-
-<tbody>
-<tr>
-<th rowspan="8" class="donor-header">
-<label for="r-donor" style="writing-mode:vertical-rl;transform:rotate(180deg);">DONOR</label>
-</th>
-<th class="type-header"><label for="r-om">O−</label></th>
-<td class="compat-cell yes"><label for="r-om"></label></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-
-<tr>
-<th class="type-header">O+</th>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-
-<tr>
-<th class="type-header">A−</th>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-
-<tr>
-<th class="type-header">A+</th>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-
-<tr>
-<th class="type-header">B−</th>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-
-<tr>
-<th class="type-header">B+</th>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-
-<tr>
-<th class="type-header">AB−</th>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-
-<tr>
-<th class="type-header"><label for="r-abp">AB+</label></th>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell no"></td>
-<td class="compat-cell yes"><label for="r-abp"></label></td>
-</tr>
-</tbody>
-</table>
-
-<div class="info-panel">
-<div class="desc d-default">
-<strong>Interactive Guide:</strong> Click headers or cells to learn blood compatibility.
-</div>
-
-<div class="desc d-recipient">
-<h3 style="color:var(--red)">Recipient</h3>
-<p>The recipient receives blood. Their immune system will reject unfamiliar antigens.</p>
-</div>
-
-<div class="desc d-donor">
-<h3 style="color:var(--dark)">Donor</h3>
-<p>Donors provide blood. O− is the universal donor for red blood cells.</p>
-</div>
-
-<div class="desc d-om">
-<h3 style="color:var(--check)">O− Universal Donor</h3>
-<p>O− blood can be given to anyone in emergencies.</p>
-<label for="r-default" style="color:blue;cursor:pointer;">Back</label>
-</div>
-
-<div class="desc d-abp">
-<h3 style="color:var(--check)">AB+ Universal Recipient</h3>
-<p>
-AB+ blood has both A and B antigens and Rh factor,
-so it can receive red blood cells from all blood groups.
-</p>
-<label for="r-default" style="color:blue;cursor:pointer;">Back</label>
-</div>
-
-
-</div>
-
+        <input type="radio" id="r-default" name="info" class="logic-gate" checked>
+        <input type="radio" id="r-recipient" name="info" class="logic-gate">
+        <input type="radio" id="r-donor" name="info" class="logic-gate">
+        <input type="radio" id="r-om" name="info" class="logic-gate">
+        <input type="radio" id="r-abp" name="info" class="logic-gate">
+        <table>
+            <thead>
+                <tr><th rowspan="2" colspan="1"></th><th></th><th colspan="8" class="recipient-header"><label for="r-recipient">RECIPIENT</label></th></tr>
+                <tr>
+                    <th class="type-header" style="color:black;">Blood<br>Type</th>
+                    <th class="type-header"><label for="r-om">O−</label></th>
+                    <th class="type-header">O+</th><th class="type-header">A−</th><th class="type-header">A+</th>
+                    <th class="type-header">B−</th><th class="type-header">B+</th><th class="type-header">AB−</th>
+                    <th class="type-header"><label for="r-abp">AB+</label></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><th rowspan="8" class="donor-header"><label for="r-donor">D<br>O<br>N<br>O<br>R</label></th><th class="type-header">O−</th><td class="compat-cell yes"><label for="r-om"></label></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+                <tr><th class="type-header">O+</th><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell no"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+                <tr><th class="type-header">A−</th><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+                <tr><th class="type-header">A+</th><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+                <tr><th class="type-header">B−</th><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+                <tr><th class="type-header">B+</th><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell no"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+                <tr><th class="type-header">AB−</th><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+                <tr><th class="type-header"><label for="r-abp">AB+</label></th><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell no"></td><td class="compat-cell yes"><label for="r-abp"></label></td></tr>
+            </tbody>
+        </table>
+        <div class="info-panel">
+            <div class="desc d-default"><strong>Interactive Guide:</strong> Click headers or cells to learn blood compatibility.</div>
+            <div class="desc d-recipient"><h3 style="color:var(--red)">Recipient</h3><p>The recipient receives blood. Their immune system will reject unfamiliar antigens.</p></div>
+            <div class="desc d-donor"><h3 style="color:var(--dark)">Donor</h3><p>Donors provide blood. O− is the universal donor for red blood cells.</p></div>
+            <div class="desc d-om"><h3 style="color:var(--check)">O− Universal Donor</h3><p>O− blood can be given to anyone in emergencies.</p><label for="r-default" style="color:blue;cursor:pointer;">Back</label></div>
+            <div class="desc d-abp"><h3 style="color:var(--check)">AB+ Universal Recipient</h3><p>AB+ blood has both A and B antigens and Rh factor, so it can receive red blood cells from all blood groups.</p><label for="r-default" style="color:blue;cursor:pointer;">Back</label></div>
+        </div>
     </div>
 </section>
 
-<!-- FOOTER -->
 <footer class="footer">
-    <div class="footer-box">
-        <img src="images/footer-logo.png" alt="">
-        <h1>Donate Blood, Save Life</h1>
-    </div>
-
-    <div class="footer-box">
-        <h3>Important Links</h3>
-        <a href="index.html">Home</a>
-        <a href="search-donor.html">Search Doner</a>
-        <a href="blood-bank.html">Blood Bank</a>
-        <a href="request.html">Blood Request</a>
-        <a href="donate-blood.html">Donate Blood</a>
-    </div>
-
-    <div class="footer-box">
-        <h3>Contact & Socials</h3>
-        <p>Phone: 01234567891</p>
-        <p>Email: donatelife2026@gmail.com</p>
-        <div class="socials">
-            <a href="#"><i class="fa-brands fa-facebook"></i></a>
-            <a href="#"><i class="fa-brands fa-instagram"></i></a>
-            <a href="#"><i class="fa-brands fa-twitter"></i></a>
-        </div>
-    </div>
-
-    <!-- Copyright -->
-    <div class="footer-bottom">
-        <p>© 2026 DonateLife. All Rights Reserved.</p>
-    </div>
+    <div class="footer-box"><img src="images/footer-logo.png" alt=""><h1>Donate Blood, Save Life</h1></div>
+    <div class="footer-box"><h3>Important Links</h3><a href="index.html">Home</a><a href="search-donor.html">Search Doner</a><a href="blood-bank.html">Blood Bank</a><a href="request.html">Blood Request</a><a href="donate-blood.html">Donate Blood</a></div>
+    <div class="footer-box"><h3>Contact &amp; Socials</h3><p>Phone: 01234567891</p><p>Email: donatelife2026@gmail.com</p><div class="socials"><a href="#"><i class="fa-brands fa-facebook"></i></a><a href="#"><i class="fa-brands fa-instagram"></i></a><a href="#"><i class="fa-brands fa-twitter"></i></a></div></div>
+    <div class="footer-bottom"><p>© 2026 DonateLife. All Rights Reserved.</p></div>
 </footer>
 
+<script type="module">
+import { db } from './firebase-init.js';
+import {
+    collection, doc, getDocs, addDoc, onSnapshot,
+    serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 
+const BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+const grid         = document.getElementById('bloodCardGrid');
+const invLoading   = document.getElementById('invLoading');
+const modal        = document.getElementById('requestModal');
+const bloodInput   = document.getElementById('requestedBlood');
+const bloodFilter  = document.getElementById('bloodFilter');
 
-<script>
-    const modal = document.getElementById("requestModal");
-    const closeBtn = document.getElementById("closeModal");
-    const bloodInput = document.getElementById("requestedBlood");
+// ── Load inventory with real-time updates ──────────────────────────────────
+onSnapshot(collection(db, 'inventory'), (snapshot) => {
+    invLoading.style.display = 'none';
 
-    document.querySelectorAll(".request-btn").forEach(button => {
-        button.addEventListener("click", () => {
-            const bloodType = button.getAttribute("data-blood");
-            bloodInput.value = bloodType;
-            modal.style.display = "block";
-        });
+    // Build a map: bloodGroup → bags
+    const inv = {};
+    BLOOD_GROUPS.forEach(g => inv[g] = 0);  // default 0
+    snapshot.forEach(d => { inv[d.id] = d.data().bags || 0; });
+
+    renderCards(inv);
+});
+
+function renderCards(inv) {
+    const selected = bloodFilter.value;
+    grid.innerHTML = '';
+    BLOOD_GROUPS.forEach(group => {
+        if (selected !== 'all' && selected !== group) return;
+        const bags  = inv[group] ?? 0;
+        const color = bags === 0 ? '#aaa' : '#d90429';
+        grid.innerHTML += `
+            <div class="blood-card" data-group="${group}">
+                <h2 style="color:${color}">${group}</h2>
+                <p class="count">Available Bags: <strong>${bags}</strong></p>
+                <button class="request-btn" data-blood="${group}" ${bags === 0 ? 'disabled style="opacity:.5;cursor:not-allowed"' : ''}>
+                    ${bags === 0 ? 'Unavailable' : 'Request Blood'}
+                </button>
+            </div>`;
     });
 
-    closeBtn.onclick = () => {
-        modal.style.display = "none";
-    };
-
-    window.onclick = (e) => {
-        if (e.target === modal) {
-            modal.style.display = "none";
-        }
-    };
-
-
-    //blood group filtering
-    const bloodFilter = document.getElementById("bloodFilter");
-    const bloodCards = document.querySelectorAll(".blood-card");
-
-    bloodFilter.addEventListener("change", () => {
-        const selectedGroup = bloodFilter.value;
-
-        bloodCards.forEach(card => {
-            const cardGroup = card.getAttribute("data-group");
-
-            if (selectedGroup === "all" || cardGroup === selectedGroup) {
-                card.style.display = "block";
-            } else {
-                card.style.display = "none";
-            }
+    // Attach click handlers
+    document.querySelectorAll('.request-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', () => {
+            bloodInput.value = btn.getAttribute('data-blood');
+            modal.style.display = 'block';
         });
     });
+}
 
+// Re-render when filter changes (inventory already loaded)
+bloodFilter.addEventListener('change', () => {
+    // Re-trigger by re-reading the existing cards DOM isn't reliable —
+    // instead just re-fetch (snapshot already has latest data via closure trick)
+    // We'll store latest inv in module scope
+    renderCards(latestInv);
+});
 
+let latestInv = {};
+BLOOD_GROUPS.forEach(g => latestInv[g] = 0);
 
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyB4kQdzuZu-at1TtlN_db9HNTHre734mq0",
-  authDomain: "donatelife-daf28.firebaseapp.com",
-  projectId: "donatelife-daf28",
-  storageBucket: "donatelife-daf28.firebasestorage.app",
-  messagingSenderId: "544833489737",
-  appId: "1:544833489737:web:4021902b192fe4bddce898",
-  measurementId: "G-54ZVELBSGY"
-};
+onSnapshot(collection(db, 'inventory'), (snapshot) => {
+    invLoading.style.display = 'none';
+    BLOOD_GROUPS.forEach(g => latestInv[g] = 0);
+    snapshot.forEach(d => { latestInv[d.id] = d.data().bags || 0; });
+    renderCards(latestInv);
+});
+
+// ── Modal close ────────────────────────────────────────────────────────────
+document.getElementById('closeModal').onclick = () => { modal.style.display = 'none'; };
+window.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+
+// ── Bank request form → save to Firestore ─────────────────────────────────
+const bankForm = document.getElementById('bankRequestForm');
+const bankBtn  = document.getElementById('bankReqBtn');
+const bankMsg  = document.getElementById('bankReqMsg');
+
+function showBankMsg(text, ok) {
+    bankMsg.textContent = text;
+    bankMsg.style.background = ok ? '#d4edda' : '#f8d7da';
+    bankMsg.style.color      = ok ? '#155724' : '#721c24';
+    bankMsg.style.display    = 'block';
+}
+
+bankForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const v = id => document.getElementById(id).value.trim();
+    try {
+        bankBtn.disabled = true;
+        bankBtn.textContent = 'Submitting…';
+        await addDoc(collection(db, 'requests'), {
+            patientName:   v('reqPatient'),
+            phone:         v('reqPhone'),
+            hospital:      v('reqHospital'),
+            neededBy:      v('reqNeededBy') ? new Date(v('reqNeededBy')) : null,
+            bags:          parseInt(v('reqBags')),
+            bloodGroup:    v('requestedBlood'),
+            returnGroup:   v('reqReturnGroup'),
+            doctorName:    v('reqDoctor'),
+            doctorPhone:   v('reqDoctorPhone'),
+            source:        'blood-bank',
+            status:        'pending',
+            createdAt:     serverTimestamp()
+        });
+        showBankMsg('✅ Request submitted successfully!', true);
+        bankForm.reset();
+        setTimeout(() => { modal.style.display = 'none'; bankMsg.style.display = 'none'; }, 2000);
+    } catch (err) {
+        console.error('Error submitting request:', err);
+        showBankMsg('❌ Submission failed. Please try again.', false);
+    } finally {
+        bankBtn.disabled = false;
+        bankBtn.textContent = 'Submit Request';
+    }
+});
 </script>
-
 
 </body>
 </html>

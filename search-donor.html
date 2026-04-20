@@ -2,206 +2,154 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>DonateLife Search Donor</title>
+    <title>DonateLife | Search Donor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    
-
+    <link rel="shortcut icon" href="images/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles/search-donor.css">
     <link rel="stylesheet" href="styles/navbar.css">
     <link rel="stylesheet" href="styles/footer.css">
 </head>
 <body>
 
-    <nav>
-        <div class="logo">
-           <img src="images/logo (2).png" alt="">
-        </div>
-        <ul class="nav">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="blood-bank.html">Blood Bank</a></li>
-            <li><a href="search-donor.html">Search Doner</a></li>
-            <li><a href="request.html">Blood Request</a></li>
-            <li><a href="donate-blood.html">Donate Blood</a></li>
-        </ul>
-    </nav>
+<nav>
+    <div class="logo"><img src="images/logo (2).png" alt=""></div>
+    <ul class="nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="blood-bank.html">Blood Bank</a></li>
+        <li><a href="search-donor.html">Search Doner</a></li>
+        <li><a href="request.html">Blood Request</a></li>
+        <li><a href="donate-blood.html">Donate Blood</a></li>
+    </ul>
+</nav>
 
 <section class="search-section">
     <h2>Search Blood Donor</h2>
-
     <div class="filters">
         <input type="text" id="searchInput" placeholder="Search by name or area">
-
         <select id="bloodFilter">
             <option value="">All Blood Groups</option>
-            <option>A+</option><option>A-</option>
-            <option>B+</option><option>B-</option>
-            <option>AB+</option><option>AB-</option>
-            <option>O+</option><option>O-</option>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
         </select>
-
         <select id="areaFilter">
             <option value="">All Areas</option>
-            <option>Dhanmondi</option>
-            <option>Mirpur</option>
-            <option>Uttara</option>
-            <option>Banani</option>
         </select>
     </div>
 </section>
 
 <section class="donor-container">
+    <p id="statusMsg" style="text-align:center;color:#888;padding:20px;">Loading donors…</p>
     <div class="donor-grid" id="donorGrid"></div>
     <p class="no-result" id="noResult" style="display:none;">No eligible donors found.</p>
 </section>
 
-<!-- FOOTER -->
 <footer class="footer">
-    <div class="footer-box">
-        <img src="images/footer-logo.png" alt="">
-        <h1>Donate Blood, Save Life</h1>
-    </div>
-
-    <div class="footer-box">
-        <h3>Important Links</h3>
-        <a href="index.html">Home</a>
-        <a href="search-donor.html">Search Doner</a>
-        <a href="blood-bank.html">Blood Bank</a>
-        <a href="request.html">Blood Request</a>
-        <a href="donate-blood.html">Donate Blood</a>
-    </div>
-
-    <div class="footer-box">
-        <h3>Contact & Socials</h3>
-        <p>Phone: 01234567891</p>
-        <p>Email: donatelife2026@gmail.com</p>
-        <div class="socials">
-            <a href="#"><i class="fa-brands fa-facebook"></i></a>
-            <a href="#"><i class="fa-brands fa-instagram"></i></a>
-            <a href="#"><i class="fa-brands fa-twitter"></i></a>
-        </div>
-    </div>
-
-    <!-- Copyright -->
-    <div class="footer-bottom">
-        <p>© 2026 DonateLife. All Rights Reserved.</p>
-    </div>
+    <div class="footer-box"><img src="images/footer-logo.png" alt=""><h1>Donate Blood, Save Life</h1></div>
+    <div class="footer-box"><h3>Important Links</h3><a href="index.html">Home</a><a href="search-donor.html">Search Doner</a><a href="blood-bank.html">Blood Bank</a><a href="request.html">Blood Request</a><a href="donate-blood.html">Donate Blood</a></div>
+    <div class="footer-box"><h3>Contact &amp; Socials</h3><p>Phone: 01234567891</p><p>Email: donatelife2026@gmail.com</p><div class="socials"><a href="#"><i class="fa-brands fa-facebook"></i></a><a href="#"><i class="fa-brands fa-instagram"></i></a><a href="#"><i class="fa-brands fa-twitter"></i></a></div></div>
+    <div class="footer-bottom"><p>© 2026 DonateLife. All Rights Reserved.</p></div>
 </footer>
 
-<script>
-    const donors = [
-        {
-            name: "Rahim Ahmed",
-            blood: "O+",
-            gender: "Male",
-            age: 24,
-            area: "Dhanmondi",
-            phone: "01XXXXXXXXX",
-            email: "rahim@gmail.com",
-            lastDonationMonths: 4,
-            eligible: true,
-            img: "https://i.pravatar.cc/150?img=12"
-        },
-        {
-            name: "Nusrat Jahan",
-            blood: "A+",
-            gender: "Female",
-            age: 22,
-            area: "Mirpur",
-            phone: "01XXXXXXXXX",
-            email: "nusrat@gmail.com",
-            lastDonationMonths: 2,
-            eligible: true,
-            img: "https://i.pravatar.cc/150?img=47"
-        },
-        {
-            name: "Imran Khan",
-            blood: "B+",
-            gender: "Male",
-            age: 28,
-            area: "Uttara",
-            phone: "01XXXXXXXXX",
-            email: "imran@gmail.com",
-            lastDonationMonths: 6,
-            eligible: true,
-            img: "https://i.pravatar.cc/150?img=32"
-        }
-    ];
+<script type="module">
+import { db } from './firebase-init.js';
+import { collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 
-    const grid = document.getElementById("donorGrid");
-    const noResult = document.getElementById("noResult");
+const grid        = document.getElementById('donorGrid');
+const noResult    = document.getElementById('noResult');
+const statusMsg   = document.getElementById('statusMsg');
+const searchInput = document.getElementById('searchInput');
+const bloodFilter = document.getElementById('bloodFilter');
+const areaFilter  = document.getElementById('areaFilter');
 
-    function renderDonors() {
-        grid.innerHTML = "";
-        noResult.style.display = "none";
+let allDonors = [];
 
-        const search = searchInput.value.toLowerCase();
-        const blood = bloodFilter.value;
-        const area = areaFilter.value;
+// Fetch all eligible donors from Firestore
+async function fetchDonors() {
+    try {
+        const snap = await getDocs(query(collection(db, 'donors'), orderBy('createdAt', 'desc')));
+        allDonors = [];
+        const areas = new Set();
 
-        const filtered = donors.filter(d =>
-            d.eligible &&
-            d.lastDonationMonths >= 3 &&
-            (d.name.toLowerCase().includes(search) || d.area.toLowerCase().includes(search)) &&
-            (blood === "" || d.blood === blood) &&
-            (area === "" || d.area === area)
-        );
-
-        if (filtered.length === 0) {
-            noResult.style.display = "block";
-            return;
-        }
-
-        filtered.forEach(d => {
-            grid.innerHTML += `
-                <div class="donor-card">
-                    <img src="${d.img}">
-                    <h3>${d.name}</h3>
-                    <span class="blood">${d.blood}</span>
-
-                    <div class="donor-info">
-                        <p><strong>Gender:</strong> ${d.gender}</p>
-                        <p><strong>Age:</strong> ${d.age}</p>
-                        <p><strong>Area:</strong> ${d.area}</p>
-                        <p><strong>Phone:</strong> ${d.phone}</p>
-                        <p><strong>Email:</strong> ${d.email}</p>
-                    </div>
-
-                    <div class="contact-btns">
-                        <a class="call" href="tel:${d.phone}">
-                            <i class="fa-solid fa-phone"></i> Call
-                        </a>
-                        <a class="email" href="mailto:${d.email}">
-                            <i class="fa-solid fa-envelope"></i> Email
-                        </a>
-                    </div>
-                </div>
-            `;
+        snap.forEach(doc => {
+            const d = { id: doc.id, ...doc.data() };
+            allDonors.push(d);
+            if (d.area) areas.add(d.area);
         });
+
+        // Populate area filter dynamically
+        areas.forEach(area => {
+            const opt = document.createElement('option');
+            opt.value = area;
+            opt.textContent = area;
+            areaFilter.appendChild(opt);
+        });
+
+        statusMsg.style.display = 'none';
+        renderDonors();
+    } catch (err) {
+        console.error('Error fetching donors:', err);
+        statusMsg.textContent = 'Error loading donors. Please refresh the page.';
+    }
+}
+
+function renderDonors() {
+    grid.innerHTML = '';
+    noResult.style.display = 'none';
+
+    const search = searchInput.value.toLowerCase();
+    const blood  = bloodFilter.value;
+    const area   = areaFilter.value;
+
+    const filtered = allDonors.filter(d => {
+        // Must be eligible and donated 3+ months ago (or never donated before)
+        if (!d.eligible) return false;
+        if (d.lastDonationMonths !== null && d.lastDonationMonths !== undefined && d.lastDonationMonths < 3) return false;
+
+        const nameMatch = (d.name || '').toLowerCase().includes(search);
+        const areaMatch = (d.area || '').toLowerCase().includes(search);
+        if (search && !nameMatch && !areaMatch) return false;
+        if (blood && d.bloodGroup !== blood) return false;
+        if (area && d.area !== area) return false;
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        noResult.style.display = 'block';
+        return;
     }
 
-    searchInput.addEventListener("input", renderDonors);
-    bloodFilter.addEventListener("change", renderDonors);
-    areaFilter.addEventListener("change", renderDonors);
+    filtered.forEach(d => {
+        // Use a generated avatar based on gender
+        const avatarSeed = encodeURIComponent(d.name || d.id);
+        const avatarUrl  = `https://ui-avatars.com/api/?name=${avatarSeed}&background=d90429&color=fff&size=150`;
 
-    renderDonors();
+        grid.innerHTML += `
+            <div class="donor-card">
+                <img src="${avatarUrl}" alt="${d.name}">
+                <h3>${d.name || 'Unknown'}</h3>
+                <span class="blood">${d.bloodGroup || 'N/A'}</span>
+                <div class="donor-info">
+                    <p><strong>Gender:</strong> ${d.gender || 'N/A'}</p>
+                    <p><strong>Age:</strong> ${d.age || 'N/A'}</p>
+                    <p><strong>Area:</strong> ${d.area || 'N/A'}</p>
+                    <p><strong>District:</strong> ${d.district || 'N/A'}</p>
+                    <p><strong>Phone:</strong> ${d.phone || 'N/A'}</p>
+                    ${d.email ? `<p><strong>Email:</strong> ${d.email}</p>` : ''}
+                </div>
+                <div class="contact-btns">
+                    <a class="call" href="tel:${d.phone}"><i class="fa-solid fa-phone"></i> Call</a>
+                    ${d.email ? `<a class="email" href="mailto:${d.email}"><i class="fa-solid fa-envelope"></i> Email</a>` : ''}
+                </div>
+            </div>`;
+    });
+}
 
+searchInput.addEventListener('input',  renderDonors);
+bloodFilter.addEventListener('change', renderDonors);
+areaFilter.addEventListener('change',  renderDonors);
 
-
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyB4kQdzuZu-at1TtlN_db9HNTHre734mq0",
-  authDomain: "donatelife-daf28.firebaseapp.com",
-  projectId: "donatelife-daf28",
-  storageBucket: "donatelife-daf28.firebasestorage.app",
-  messagingSenderId: "544833489737",
-  appId: "1:544833489737:web:4021902b192fe4bddce898",
-  measurementId: "G-54ZVELBSGY"
-};
+fetchDonors();
 </script>
 
 </body>

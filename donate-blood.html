@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DonateLife | Blood Donor Registration</title>
     <link rel="shortcut icon" href="images/favicon.png">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <link rel="stylesheet" href="styles/donate-blood.css">
     <link rel="stylesheet" href="styles/navbar.css">
@@ -13,232 +12,185 @@
 </head>
 <body>
 
-<!-- NAVBAR -->
-    <nav>
-        <div class="logo">
-           <img src="images/logo (2).png" alt="">
-        </div>
-        <ul class="nav">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="blood-bank.html">Blood Bank</a></li>
-            <li><a href="search-donor.html">Search Doner</a></li>
-            <li><a href="request.html">Blood Request</a></li>
-            <li><a href="donate-blood.html">Donate Blood</a></li>
-        </ul>
-    </nav>
+<nav>
+    <div class="logo"><img src="images/logo (2).png" alt=""></div>
+    <ul class="nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="blood-bank.html">Blood Bank</a></li>
+        <li><a href="search-donor.html">Search Doner</a></li>
+        <li><a href="request.html">Blood Request</a></li>
+        <li><a href="donate-blood.html">Donate Blood</a></li>
+    </ul>
+</nav>
 
-
-<!-- FORM CONTAINER -->
 <div class="form-container">
-
     <header>
         <h2>DonateLife</h2>
         <h3>Voluntary Blood Donor Registration Form</h3>
-        <p class="form-note">
-            DonateLife is a private, non-governmental platform that connects voluntary blood donors
-            with patients and hospitals across Bangladesh.
-        </p>
+        <p class="form-note">DonateLife is a private, non-governmental platform that connects voluntary blood donors with patients and hospitals across Bangladesh.</p>
     </header>
 
-    <form action="#" method="POST">
+    <div id="formMsg" style="display:none;padding:14px 18px;border-radius:6px;margin-bottom:20px;font-weight:600;"></div>
 
-        <!-- PERSONAL DETAILS -->
+    <form id="donorForm">
         <fieldset>
             <legend>Personal Information</legend>
-
+            <div class="row"><div class="col"><label>Full Name *</label><input type="text" id="name" required></div></div>
             <div class="row">
-                <div class="col">
-                    <label>Full Name *</label>
-                    <input type="text" name="name" required>
+                <div class="col"><label>National ID (NID) No.</label><input type="text" id="nid"></div>
+                <div class="col"><label>Passport No. (If Foreign National)</label><input type="text" id="passport"></div>
+            </div>
+            <div class="row">
+                <div class="col"><label>Date of Birth *</label><input type="date" id="dob" required></div>
+                <div class="col"><label>Gender *</label>
+                    <select id="gender" required><option value="">Select</option><option>Male</option><option>Female</option></select>
                 </div>
             </div>
-
             <div class="row">
-                <div class="col">
-                    <label>National ID (NID) No.</label>
-                    <input type="text" name="nid">
-                </div>
-                <div class="col">
-                    <label>Passport No. (If Foreign National)</label>
-                    <input type="text" name="passport">
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col">
-                    <label>Date of Birth *</label>
-                    <input type="date" name="dob" required>
-                </div>
-                <div class="col">
-                    <label>Gender *</label>
-                    <select name="gender" required>
+                <div class="col"><label>Blood Group *</label>
+                    <select id="bloodGroup" required>
                         <option value="">Select</option>
-                        <option>Male</option>
-                        <option>Female</option>
+                        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                        <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
                     </select>
                 </div>
+                <div class="col"><label>Last Blood Donation Date</label><input type="date" id="lastDonation"></div>
             </div>
-
             <div class="row">
-                <div class="col">
-                    <label>Blood Group *</label>
-                    <select name="blood_group" required>
-                        <option value="">Select</option>
-                        <option>A+</option><option>A-</option>
-                        <option>B+</option><option>B-</option>
-                        <option>O+</option><option>O-</option>
-                        <option>AB+</option><option>AB-</option>
-                    </select>
-                </div>
-                <div class="col">
-                    <label>Last Blood Donation Date</label>
-                    <input type="date" name="last_donation">
-                </div>
+                <div class="col"><label>Mobile Number *</label><input type="tel" id="phone" placeholder="01XXXXXXXXX" required></div>
+                <div class="col"><label>Email Address</label><input type="email" id="email"></div>
             </div>
-
             <div class="row">
-                <div class="col">
-                    <label>Mobile Number *</label>
-                    <input type="tel" name="phone" placeholder="01XXXXXXXXX" required>
-                </div>
-                <div class="col">
-                    <label>Email Address</label>
-                    <input type="email" name="email">
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col">
-                    <label>District *</label>
-                    <input type="text" name="district" placeholder="e.g. Dhaka" required>
-                </div>
-                <div class="col">
-                    <label>Area / Thana *</label>
-                    <input type="text" name="area" placeholder="e.g. Mirpur, Kotwali" required>
-                </div>
+                <div class="col"><label>District *</label><input type="text" id="district" placeholder="e.g. Dhaka" required></div>
+                <div class="col"><label>Area / Thana *</label><input type="text" id="area" placeholder="e.g. Mirpur, Kotwali" required></div>
             </div>
         </fieldset>
 
-        <!-- SAFETY NOTICE -->
         <div class="warning-box">
             <h4>Important Safety Notice</h4>
-            <p>
-                Please do <strong>not</strong> register if you believe your blood may not be safe for donation
-                due to any illness, infection, or high-risk behavior.
-            </p>
+            <p>Please do <strong>not</strong> register if you believe your blood may not be safe for donation due to any illness, infection, or high-risk behavior.</p>
         </div>
 
-        <!-- ELIGIBILITY QUESTIONS -->
         <fieldset>
-            <legend>Health & Eligibility Questions</legend>
-
+            <legend>Health &amp; Eligibility Questions</legend>
             <table class="question-table">
-                <tr>
-                    <th>No.</th>
-                    <th>Question</th>
-                    <th>Yes</th>
-                    <th>No</th>
-                </tr>
-
-                <tr>
-                    <td>1</td>
-                    <td>Are you feeling physically well today?</td>
-                    <td><input type="radio" name="q1" value="yes" required></td>
-                    <td><input type="radio" name="q1" value="no"></td>
-                </tr>
-
-                <tr>
-                    <td>2</td>
-                    <td>Have you had fever, cold, or infection in the last 7 days?</td>
-                    <td><input type="radio" name="q2" value="yes" required></td>
-                    <td><input type="radio" name="q2" value="no"></td>
-                </tr>
-
-                <tr>
-                    <td>3</td>
-                    <td>Have you had tattooing, piercing, or major surgery in the last 6 months?</td>
-                    <td><input type="radio" name="q3" value="yes" required></td>
-                    <td><input type="radio" name="q3" value="no"></td>
-                </tr>
-
-                <tr>
-                    <td>4</td>
-                    <td>Are you aware that DonateLife is not a diagnostic or testing service?</td>
-                    <td><input type="radio" name="q4" value="yes" required></td>
-                    <td><input type="radio" name="q4" value="no"></td>
-                </tr>
+                <tr><th>No.</th><th>Question</th><th>Yes</th><th>No</th></tr>
+                <tr><td>1</td><td>Are you feeling physically well today?</td><td><input type="radio" name="q1" value="yes" required></td><td><input type="radio" name="q1" value="no"></td></tr>
+                <tr><td>2</td><td>Have you had fever, cold, or infection in the last 7 days?</td><td><input type="radio" name="q2" value="yes" required></td><td><input type="radio" name="q2" value="no"></td></tr>
+                <tr><td>3</td><td>Have you had tattooing, piercing, or major surgery in the last 6 months?</td><td><input type="radio" name="q3" value="yes" required></td><td><input type="radio" name="q3" value="no"></td></tr>
+                <tr><td>4</td><td>Are you aware that DonateLife is not a diagnostic or testing service?</td><td><input type="radio" name="q4" value="yes" required></td><td><input type="radio" name="q4" value="no"></td></tr>
             </table>
         </fieldset>
 
-        <!-- FEMALE DONORS -->
         <fieldset>
             <legend>For Female Donors Only</legend>
-
             <div class="row">
-                <div class="col">
-                    <label>Are you currently pregnant or breastfeeding?</label><br>
-                    <input type="radio" name="female_q1" value="yes"> Yes
-                    <input type="radio" name="female_q1" value="no"> No
-                </div>
-                <div class="col">
-                    <label>Have you delivered a baby within the last 6 months?</label><br>
-                    <input type="radio" name="female_q2" value="yes"> Yes
-                    <input type="radio" name="female_q2" value="no"> No
-                </div>
+                <div class="col"><label>Are you currently pregnant or breastfeeding?</label><br><input type="radio" name="female_q1" value="yes"> Yes <input type="radio" name="female_q1" value="no"> No</div>
+                <div class="col"><label>Have you delivered a baby within the last 6 months?</label><br><input type="radio" name="female_q2" value="yes"> Yes <input type="radio" name="female_q2" value="no"> No</div>
             </div>
         </fieldset>
 
-        <!-- DECLARATION -->
         <div class="declaration">
-            <label>
-                <input type="checkbox" required>
-                I confirm that all information provided is true and accurate.
-                I understand that DonateLife only connects donors and recipients and that
-                actual blood donation will take place at a licensed hospital or blood bank.
-            </label>
+            <label><input type="checkbox" id="declaration" required> I confirm that all information provided is true and accurate. I understand that DonateLife only connects donors and recipients and that actual blood donation will take place at a licensed hospital or blood bank.</label>
         </div>
 
-        <!-- BUTTONS -->
         <div class="btn-group">
-            <button type="submit" class="submit-btn">Register as Donor</button>
+            <button type="submit" class="submit-btn" id="submitBtn">Register as Donor</button>
             <button type="reset" class="reset-btn">Clear Form</button>
         </div>
-
     </form>
 </div>
 
-<!-- FOOTER -->
 <footer class="footer">
-    <div class="footer-box">
-        <img src="images/footer-logo.png" alt="">
-        <h1>Donate Blood, Save Life</h1>
-    </div>
-
-    <div class="footer-box">
-        <h3>Important Links</h3>
-        <a href="index.html">Home</a>
-        <a href="search-donor.html">Search Doner</a>
-        <a href="blood-bank.html">Blood Bank</a>
-        <a href="request.html">Blood Request</a>
-        <a href="donate-blood.html">Donate Blood</a>
-    </div>
-
-    <div class="footer-box">
-        <h3>Contact & Socials</h3>
-        <p>Phone: 01234567891</p>
-        <p>Email: donatelife2026@gmail.com</p>
-        <div class="socials">
-            <a href="#"><i class="fa-brands fa-facebook"></i></a>
-            <a href="#"><i class="fa-brands fa-instagram"></i></a>
-            <a href="#"><i class="fa-brands fa-twitter"></i></a>
-        </div>
-    </div>
-
-    <!-- Copyright -->
-    <div class="footer-bottom">
-        <p>© 2026 DonateLife. All Rights Reserved.</p>
-    </div>
+    <div class="footer-box"><img src="images/footer-logo.png" alt=""><h1>Donate Blood, Save Life</h1></div>
+    <div class="footer-box"><h3>Important Links</h3><a href="index.html">Home</a><a href="search-donor.html">Search Doner</a><a href="blood-bank.html">Blood Bank</a><a href="request.html">Blood Request</a><a href="donate-blood.html">Donate Blood</a></div>
+    <div class="footer-box"><h3>Contact &amp; Socials</h3><p>Phone: 01234567891</p><p>Email: donatelife2026@gmail.com</p><div class="socials"><a href="#"><i class="fa-brands fa-facebook"></i></a><a href="#"><i class="fa-brands fa-instagram"></i></a><a href="#"><i class="fa-brands fa-twitter"></i></a></div></div>
+    <div class="footer-bottom"><p>© 2026 DonateLife. All Rights Reserved.</p></div>
 </footer>
+
+<script type="module">
+import { db } from './firebase-init.js';
+import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+const form      = document.getElementById('donorForm');
+const submitBtn = document.getElementById('submitBtn');
+const msgBox    = document.getElementById('formMsg');
+
+function showMsg(text, ok) {
+    msgBox.textContent = text;
+    msgBox.style.background = ok ? '#d4edda' : '#f8d7da';
+    msgBox.style.color      = ok ? '#155724' : '#721c24';
+    msgBox.style.display    = 'block';
+    msgBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function calcAge(dobStr) {
+    if (!dobStr) return null;
+    const today = new Date(), dob = new Date(dobStr);
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+}
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v  = id => document.getElementById(id)?.value?.trim() || '';
+    const rv = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; };
+
+    const dob        = v('dob');
+    const age        = calcAge(dob);
+    const lastDonation = v('lastDonation') || null;
+
+    // Basic eligibility: well today, no recent fever, no recent surgery, age 18-60
+    const eligible = (rv('q1')==='yes') && (rv('q2')==='no') && (rv('q3')==='no') && age >= 18 && age <= 60;
+
+    // Calculate months since last donation (for search-donor filtering)
+    let lastDonationMonths = null;
+    if (lastDonation) {
+        const diff = (new Date() - new Date(lastDonation)) / (1000 * 60 * 60 * 24 * 30.44);
+        lastDonationMonths = Math.floor(diff);
+    }
+
+    const donorData = {
+        name:              v('name'),
+        nid:               v('nid'),
+        passport:          v('passport'),
+        dob,
+        age,
+        gender:            v('gender'),
+        bloodGroup:        v('bloodGroup'),
+        lastDonation,
+        lastDonationMonths,
+        phone:             v('phone'),
+        email:             v('email'),
+        district:          v('district'),
+        area:              v('area'),
+        healthQ1:          rv('q1'),
+        healthQ2:          rv('q2'),
+        healthQ3:          rv('q3'),
+        healthQ4:          rv('q4'),
+        femaleQ1:          rv('female_q1'),
+        femaleQ2:          rv('female_q2'),
+        eligible,
+        createdAt:         serverTimestamp()
+    };
+
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Registering…';
+        await addDoc(collection(db, 'donors'), donorData);
+        showMsg('✅ Registration successful! Thank you for registering as a blood donor.', true);
+        form.reset();
+    } catch (err) {
+        console.error('Firestore error:', err);
+        showMsg('❌ Registration failed. Please check your connection and try again.', false);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register as Donor';
+    }
+});
+</script>
 
 </body>
 </html>

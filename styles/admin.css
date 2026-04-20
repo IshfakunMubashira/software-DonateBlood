@@ -44,11 +44,12 @@ body {
     gap: 15px;
     margin-left: auto;
     padding: 0 20px;
-    color: white;
+    color: rgb(77, 60, 60);
 }
 
 .admin-user i {
     font-size: 24px;
+    color: rgb(77, 60, 60);
 }
 
 .logout-btn {

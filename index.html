@@ -193,76 +193,8 @@
 <section id="events">
     <div class="events-container">
         <h2 class="section-title">Recent Events</h2>
-
-        <div class="event-cards">
-            <div class="event-card">
-                <div class="event-slider">
-                    <img src="images/event1-1.jpeg" class="active">
-                    <img src="images/event1-2.jpeg">
-                     <img src="images/event1-3.jpeg">
-                </div>
-
-                <h3>Give Blood for Free, <br>Give Life with Love.</h3>
-                <p class="event-date">
-    <i class="fa-regular fa-calendar"></i> 12 January 2025  
-    &nbsp; | &nbsp;
-    <i class="fa-regular fa-clock"></i> 10:00 AM – 4:00 PM
-</p>
-
-
-                <p class="event-text">
-                    The Free Blood Donation Campaign at Yasin High School, Rajbari, organized in collaboration with the Bangladesh Red Crescent Society (BDRCS), Red Crescent Unit Rajbari, and Youth Red Crescent Rajbari Unit, reflects a strong commitment to humanity and community service. Through voluntary blood donation, this initiative aims to save lives, strengthen local blood reserves, and inspire compassion among the people of Rajbari.
-                </p>
-
-                <span class="see-more">See more..</span>
-            </div>
-
-            <div class="event-card">
-                <div class="event-slider">
-                    <img src="images/event2-1.jpeg" class="active">
-                    <img src="images/event2-2.jpeg">
-                    <img src="images/event2-3.jpeg">
-                    <img src="images/event2-4.jpeg">
-                </div>
-
-                <h3>Every Drop Counts — Together We Save Lives.</h3>
-                <p class="event-date">
-    <i class="fa-regular fa-calendar"></i> 12 January 2025  
-    &nbsp; | &nbsp;
-    <i class="fa-regular fa-clock"></i> 10:00 AM – 4:00 PM
-</p>
-
-
-                <p class="event-text">
-                    The Blood Donation Campaign 2025 reflects a shared commitment to compassion and public health. Organized through the collaboration of SCMST and Quantum Foundation Bangladesh, the initiative united students and staff in a collective effort to strengthen blood reserves and uphold humanitarian values. This campaign stands as a testament to responsible healthcare leadership and service to the community.
-                </p>
-
-                <span class="see-more">See more..</span>
-            </div>
-            <div class="event-card">
-                <div class="event-slider">
-                    <img src="images/event3-1.jpeg" class="active">
-                    <img src="images/event3-2.jpeg">
-                    <img src="images/event3-3.jpeg">
-                    <img src="images/event3-4.jpeg">
-                </div>
-
-                <h3>Build Roads, Save Lives — Donate Blood.</h3>
-                <p class="event-date">
-    <i class="fa-regular fa-calendar"></i> 12 January 2025  
-    &nbsp; | &nbsp;
-    <i class="fa-regular fa-clock"></i> 10:00 AM – 4:00 PM
-</p>
-
-
-                <p class="event-text">
-                    The Blood Donation Campaign organized by the Road Development Authority reflects our commitment beyond infrastructure—towards humanity. By coming together to donate blood, we are not only connecting roads but also connecting lives. A small act today can become someone’s lifeline tomorrow.
-                </p>
-
-                <span class="see-more">See more..</span>
-            </div>
-
-        </div>
+        <p id="eventsLoading" style="text-align:center;color:#888;padding:20px;">Loading events…</p>
+        <div class="event-cards" id="eventCards"></div>
     </div>
 </section>
 
@@ -290,7 +222,7 @@
     <div class="footer-box">
         <h3>Contact & Socials</h3>
         <p>Phone: 01234567891</p>
-        <p>Email: donatelife2026@gmail.com</p>
+        <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4d2922232c392821242b287f7d7f7b0d2a202c2421632e2220">[email&#160;protected]</a></p>
         <div class="socials">
             <a href="#"><i class="fa-brands fa-facebook"></i></a>
             <a href="#"><i class="fa-brands fa-instagram"></i></a>
@@ -305,42 +237,77 @@
 </footer>
 
 
-<script>
-    // image rotation in the events
-document.querySelectorAll(".event-slider").forEach(slider => {
-    let images = slider.querySelectorAll("img");
-    let index = 0;
+<script type="module">
+import { db } from './firebase-init.js';
+import {
+    collection, query, orderBy, getDocs
+} from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 
-    setInterval(() => {
-        images[index].classList.remove("active");
-        index = (index + 1) % images.length;
-        images[index].classList.add("active");
-    }, 2500);
-});
+async function loadEvents() {
+    const eventsLoading = document.getElementById('eventsLoading');
+    const eventCards    = document.getElementById('eventCards');
+    try {
+        const snap = await getDocs(query(collection(db, 'events'), orderBy('date', 'desc')));
+        if (snap.empty) {
+            eventsLoading.textContent = 'No events available yet.';
+            return;
+        }
+        eventsLoading.style.display = 'none';
+        let html = '';
+        snap.forEach(docSnap => {
+            const ev = docSnap.data();
+            const images  = (ev.images && ev.images.length > 0) ? ev.images : ['images/event1-1.jpeg'];
+            const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-BD', { day:'numeric', month:'long', year:'numeric' }) : 'TBD';
+            const timeStr = ev.time || '';
+            const slidesHtml = images.map((src, i) =>
+                `<img src="${src}" ${i === 0 ? 'class="active"' : ''} alt="${ev.title || 'Event'}">`
+            ).join('\n');
+            html += `
+                <div class="event-card">
+                    <div class="event-slider">${slidesHtml}</div>
+                    <h3>${ev.title || 'Blood Donation Event'}</h3>
+                    <p class="event-date">
+                        <i class="fa-regular fa-calendar"></i> ${dateStr}
+                        ${timeStr ? '&nbsp;|&nbsp;<i class="fa-regular fa-clock"></i> ' + timeStr : ''}
+                        ${ev.location ? '&nbsp;|&nbsp;<i class="fa-solid fa-location-dot"></i> ' + ev.location : ''}
+                    </p>
+                    <p class="event-text">${ev.description || ''}</p>
+                    <span class="see-more">See more..</span>
+                </div>`;
+        });
+        eventCards.innerHTML = html;
+        initSliders();
+        initSeeMore();
+    } catch (err) {
+        console.error('Error loading events:', err);
+        eventsLoading.textContent = 'Could not load events.';
+    }
+}
 
-// see more.. effects in the events
-document.querySelectorAll(".see-more").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const text = btn.previousElementSibling;
-
-        text.classList.toggle("expanded");
-        btn.innerText = text.classList.contains("expanded")
-            ? "See less"
-            : "See more..";
+function initSliders() {
+    document.querySelectorAll('.event-slider').forEach(slider => {
+        const images = slider.querySelectorAll('img');
+        if (images.length <= 1) return;
+        let index = 0;
+        setInterval(() => {
+            images[index].classList.remove('active');
+            index = (index + 1) % images.length;
+            images[index].classList.add('active');
+        }, 2500);
     });
-});
+}
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyB4kQdzuZu-at1TtlN_db9HNTHre734mq0",
-  authDomain: "donatelife-daf28.firebaseapp.com",
-  projectId: "donatelife-daf28",
-  storageBucket: "donatelife-daf28.firebasestorage.app",
-  messagingSenderId: "544833489737",
-  appId: "1:544833489737:web:4021902b192fe4bddce898",
-  measurementId: "G-54ZVELBSGY"
-};
+function initSeeMore() {
+    document.querySelectorAll('.see-more').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const text = btn.previousElementSibling;
+            text.classList.toggle('expanded');
+            btn.innerText = text.classList.contains('expanded') ? 'See less' : 'See more..';
+        });
+    });
+}
+
+loadEvents();
 </script>
-
 </body>
 </html>
