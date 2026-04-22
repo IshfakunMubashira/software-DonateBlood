@@ -1,136 +1,139 @@
-*{
+* {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
 }
 
+:root {
+    --red:   #d90429;
+    --dark:  #2b2d42;
+    --light: #edf2f4;
+    --gray:  #8d99ae;
+}
 
-        :root {
-            --red: #d90429;
-            --dark: #2b2d42;
-            --light: #edf2f4;
-            --gray: #8d99ae;
-        }
+.donor-container,
+.search-section {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f8f9fa;
+}
 
-        .donor-container, .search-section {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f8f9fa;
-        }
+/* ── Search Section ── */
+.search-section {
+    padding: 35px 5%;
+    background: white;
+}
 
-        /* ================= SEARCH SECTION ================= */
-        .search-section {
-            padding: 40px 5%;
-            background: white;
-        }
+.search-section h2 {
+    text-align: center;
+    color: var(--dark);
+    margin-bottom: 25px;
+    font-size: 26px;
+}
 
-        .search-section h2 {
-            text-align: center;
-            color: var(--dark);
-            margin-bottom: 30px;
-        }
+.filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    max-width: 900px;
+    margin: auto;
+}
 
-        .filters {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            max-width: 900px;
-            margin: auto;
-        }
+.filters input,
+.filters select {
+    padding: 11px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    width: 100%;
+}
 
-        .filters input,
-        .filters select {
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 15px;
-        }
+/* ── Donor Cards ── */
+.donor-container { padding: 35px 5%; }
 
-        /* ================= DONOR CARDS ================= */
-        .donor-container {
-            padding: 40px 5%;
-        }
+.donor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 22px;
+}
 
-        .donor-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
+.donor-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    padding: 20px;
+    text-align: center;
+}
 
-        .donor-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-            padding: 20px;
-            text-align: center;
-        }
+.donor-card img {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 3px solid var(--red);
+}
 
-        .donor-card img {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 12px;
-            border: 3px solid var(--red);
-        }
+.donor-card h3 { margin: 5px 0; color: var(--dark); }
 
-        .donor-card h3 {
-            margin: 5px 0;
-            color: var(--dark);
-        }
+.blood {
+    color: white;
+    background: var(--red);
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
 
-        .blood {
-            color: white;
-            background: var(--red);
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
+.donor-info {
+    font-size: 14px;
+    color: #555;
+    text-align: left;
+    margin-top: 10px;
+}
 
-        .donor-info {
-            font-size: 14px;
-            color: #555;
-            text-align: left;
-            margin-top: 10px;
-        }
+.donor-info p { margin: 5px 0; }
 
-        .donor-info p {
-            margin: 6px 0;
-        }
+.contact-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
 
-        .contact-btns {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
+.contact-btns a {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    text-decoration: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+}
 
-        .contact-btns a {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            text-decoration: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 14px;
-        }
+.call  { background: var(--dark); }
+.email { background: var(--red); }
+.contact-btns a:hover { opacity: 0.9; }
 
-        .call {
-            background: var(--dark);
-        }
+.no-result { text-align: center; color: #666; margin-top: 35px; }
 
-        .email {
-            background: var(--red);
-        }
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .search-section { padding: 25px 4%; }
+    .search-section h2 { font-size: 22px; }
 
-        .contact-btns a:hover {
-            opacity: 0.9;
-        }
+    .filters { grid-template-columns: 1fr; gap: 10px; }
 
-        /* ================= EMPTY MESSAGE ================= */
-        .no-result {
-            text-align: center;
-            color: #666;
-            margin-top: 40px;
-        }
+    .donor-container { padding: 25px 4%; }
+
+    .donor-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+}
+
+@media (max-width: 480px) {
+    .donor-grid { grid-template-columns: 1fr; }
+
+    .donor-card { padding: 16px; }
+
+    .contact-btns { flex-direction: column; gap: 8px; }
+    .contact-btns a { padding: 11px; }
+}
