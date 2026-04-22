@@ -152,5 +152,44 @@ areaFilter.addEventListener('change',  renderDonors);
 fetchDonors();
 </script>
 
+
+
+<script>
+(function () {
+    /* ── Hamburger menu ── */
+    const nav = document.querySelector('nav');
+    const navList = nav?.querySelector('.nav');
+    if (nav && navList) {
+        // Inject hamburger button
+        const btn = document.createElement('button');
+        btn.className = 'hamburger';
+        btn.setAttribute('aria-label', 'Toggle menu');
+        btn.innerHTML = '<span></span><span></span><span></span>';
+        nav.insertBefore(btn, navList);
+ 
+        btn.addEventListener('click', () => {
+            btn.classList.toggle('open');
+            navList.classList.toggle('open');
+        });
+ 
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!nav.contains(e.target)) {
+                btn.classList.remove('open');
+                navList.classList.remove('open');
+            }
+        });
+ 
+        // Close on link click
+        navList.querySelectorAll('a').forEach(a =>
+            a.addEventListener('click', () => {
+                btn.classList.remove('open');
+                navList.classList.remove('open');
+            })
+        );
+    }
+})();
+</script>
+ 
 </body>
 </html>

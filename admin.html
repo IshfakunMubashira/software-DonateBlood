@@ -627,5 +627,53 @@
 
     <!-- Main Admin JavaScript -->
     <script type="module" src="scripts/admin.js"></script>
+
+
+
+    <script>
+(function () {
+    /* ── Sidebar slide toggle for mobile ── */
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+ 
+    // Inject toggle button
+    const btn = document.createElement('button');
+    btn.className = 'sidebar-toggle';
+    btn.setAttribute('aria-label', 'Toggle sidebar');
+    btn.innerHTML = '<i class="fa-solid fa-bars"></i>';
+    document.body.appendChild(btn);
+ 
+    btn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        btn.querySelector('i').className =
+            sidebar.classList.contains('open')
+                ? 'fa-solid fa-xmark'
+                : 'fa-solid fa-bars';
+    });
+ 
+    // Close sidebar when a menu item is clicked on mobile
+    sidebar.querySelectorAll('.sidebar-menu li').forEach(li =>
+        li.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                btn.querySelector('i').className = 'fa-solid fa-bars';
+            }
+        })
+    );
+ 
+    // Close on outside tap
+    document.addEventListener('click', (e) => {
+        if (
+            window.innerWidth <= 768 &&
+            !sidebar.contains(e.target) &&
+            e.target !== btn &&
+            !btn.contains(e.target)
+        ) {
+            sidebar.classList.remove('open');
+            btn.querySelector('i').className = 'fa-solid fa-bars';
+        }
+    });
+})();
+</script>
 </body>
 </html>
