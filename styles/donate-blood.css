@@ -143,3 +143,36 @@ textarea {
     color: #333;
 }
 
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .form-container { margin: 15px 10px 20px; padding: 18px; }
+ 
+    .row { gap: 10px; }
+    .col { min-width: 140px; }
+ 
+    /* Stack question table on mobile */
+    .question-table { font-size: 13px; }
+    .question-table th,
+    .question-table td { padding: 7px 6px; }
+}
+ 
+@media (max-width: 480px) {
+    .form-container { margin: 10px 8px; padding: 14px; }
+ 
+    header h1  { font-size: 19px; }
+    header h3  { font-size: 15px; }
+ 
+    .row { flex-direction: column; gap: 0; }
+    .col { min-width: unset; width: 100%; }
+ 
+    /* Make question table scrollable */
+    .question-table-wrapper { overflow-x: auto; }
+ 
+    .female-row { flex-direction: column; }
+ 
+    .btn-group { flex-direction: column; align-items: center; }
+    .submit-btn,
+    .reset-btn  { width: 100%; max-width: 300px; }
+ 
+    legend { font-size: 14px; }
+}
