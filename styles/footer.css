@@ -46,6 +46,10 @@
     margin-bottom: 8px;
 }
 
+.footer-box a:hover {
+    text-decoration: underline;
+}
+
 .footer .socials {
     display: flex;
     gap: 15px;
@@ -56,4 +60,34 @@
 .footer .socials i {
     font-size: 22px;
     color: white;
+}
+
+
+@media (max-width: 768px) {
+    .footer {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .footer-box {
+        flex: 1 1 100%;
+    }
+
+    .footer .socials {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer {
+        padding: 30px 20px;
+    }
+
+    .footer-box h3 {
+        font-size: 20px;
+    }
+
+    .footer-box h1 {
+        font-size: 18px;
+    }
 }
