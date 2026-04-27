@@ -220,7 +220,7 @@ bankForm.addEventListener('submit', async e => {
     try {
         bankBtn.disabled = true;
         bankBtn.textContent = 'Submitting…';
-        await addDoc(collection(db, 'requests'), {
+        await addDoc(collection(db, 'bank_requests'), {
             patientName:   v('reqPatient'),
             phone:         v('reqPhone'),
             hospital:      v('reqHospital'),

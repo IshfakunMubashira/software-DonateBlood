@@ -1,87 +1,27 @@
 // admin.js - Complete Firebase Integration for DonateLife Admin Panel
+import { db, auth, storage, serverTimestamp, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, query, where, orderBy, limit, onSnapshot, writeBatch, ref, uploadBytes, getDownloadURL, deleteObject } from '../firebase-init.js';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
-// Initialize Firebase
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-import { 
-    getAuth, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged 
-} from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
-import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    getDocs, 
-    getDoc, 
-    doc, 
-    updateDoc, 
-    deleteDoc, 
-    setDoc,  
-    query, 
-    where, 
-    orderBy, 
-    limit, 
-    serverTimestamp,
-    onSnapshot,
-    writeBatch
-} from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-import {
-    getStorage,
-    ref,
-    uploadBytes,
-    getDownloadURL,
-    deleteObject
-} from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js';
-
-
-// ==================== FIREBASE CONFIGURATION ====================
-// Replace this with your actual Firebase config from Firebase Console
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyB4kQdzuZu-at1TtlN_db9HNTHre734mq0",
-  authDomain: "donatelife-daf28.firebaseapp.com",
-  projectId: "donatelife-daf28",
-  storageBucket: "donatelife-daf28.firebasestorage.app",
-  messagingSenderId: "544833489737",
-  appId: "1:544833489737:web:4021902b192fe4bddce898",
-  measurementId: "G-54ZVELBSGY"
-};
-
-// Initialize Firebase services
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// Make db available globally for other functions
-window.db = db;
-
-// ==================== GLOBAL VARIABLES ====================
+// Global variables
 let currentUser = null;
 let currentAdminRole = 'viewer';
 let activeTab = 'dashboard';
 let donorsUnsubscribe = null;
-let requestsUnsubscribe = null;
+let publicRequestsUnsubscribe = null;
+let bankRequestsUnsubscribe = null;
 let inventoryUnsubscribe = null;
 let eventsUnsubscribe = null;
 
 // ==================== AUTHENTICATION ====================
-
-// Check authentication state on page load
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        // document.getElementById('adminEmail').textContent = user.email;
-        
-        // Check if user is admin
         const isAdmin = await checkAdminStatus(user.email);
         if (isAdmin) {
             showAdminContent();
             loadDashboardData();
             setupRealtimeListeners();
         } else {
-            // User is authenticated but not an admin
             showError('You do not have admin privileges');
             signOut(auth);
             showLoginForm();
@@ -91,66 +31,42 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// Login form handler
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const errorElement = document.getElementById('loginError');
-    
     try {
         errorElement.textContent = '';
         await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
         console.error('Login error:', error);
-        switch (error.code) {
-            case 'auth/invalid-credential':
-                errorElement.textContent = 'Invalid email or password';
-                break;
-            case 'auth/user-not-found':
-                errorElement.textContent = 'No user found with this email';
-                break;
-            case 'auth/wrong-password':
-                errorElement.textContent = 'Incorrect password';
-                break;
-            default:
-                errorElement.textContent = 'Login failed. Please try again.';
-        }
+        errorElement.textContent = error.code === 'auth/invalid-credential' ? 'Invalid email or password' : 'Login failed. Try again.';
     }
 });
 
-// Logout button handler
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-    try {
-        await signOut(auth);
-        window.location.reload();
-    } catch (error) {
-        console.error('Logout error:', error);
-    }
+    await signOut(auth);
+    window.location.reload();
 });
 
-// Check if user email is in admins collection
 async function checkAdminStatus(email) {
     try {
         const adminDoc = await getDoc(doc(db, 'admins', email));
-
         if (adminDoc.exists()) {
-            const adminData = adminDoc.data();
-
-            currentAdminRole = adminData.role || 'viewer';
-
-            // Show admin name in navbar
-            const adminNameElement = document.getElementById('adminName');
-            if (adminNameElement) {
-                adminNameElement.textContent = adminData.name || email;
-            }
-
+            currentAdminRole = adminDoc.data().role || 'viewer';
+            document.getElementById('adminName').textContent = adminDoc.data().name || email;
             return true;
+        } else {
+            // Auto-create super admin for first login (demo convenience)
+            if (email === 'admin@donatelife.org') {
+                await setDoc(doc(db, 'admins', email), { name: 'Super Admin', role: 'super_admin', active: true, createdAt: serverTimestamp() });
+                currentAdminRole = 'super_admin';
+                document.getElementById('adminName').textContent = 'Super Admin';
+                return true;
+            }
         }
-
         return false;
-
     } catch (error) {
         console.error('Error checking admin status:', error);
         return false;
@@ -158,19 +74,14 @@ async function checkAdminStatus(email) {
 }
 
 // ==================== UI FUNCTIONS ====================
-
-// Show admin content, hide login form
 function showAdminContent() {
     document.getElementById('loginSection').style.display = 'none';
     document.getElementById('sidebar').style.display = 'block';
     document.querySelector('.main-content').style.display = 'block';
     document.getElementById('adminUser').style.display = 'flex';
-    
-    // Update date display
     updateCurrentDate();
 }
 
-// Show login form, hide admin content
 function showLoginForm() {
     document.getElementById('loginSection').style.display = 'flex';
     document.getElementById('sidebar').style.display = 'none';
@@ -178,1139 +89,612 @@ function showLoginForm() {
     document.getElementById('adminUser').style.display = 'none';
 }
 
-// Update current date in header
 function updateCurrentDate() {
     const dateElement = document.getElementById('currentDate');
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     dateElement.textContent = new Date().toLocaleDateString(undefined, options);
 }
 
-// Show error message
 function showError(message) {
-    const errorElement = document.getElementById('loginError');
-    if (errorElement) {
-        errorElement.textContent = message;
-    } else {
-        alert(message);
-    }
+    alert(message);
 }
 
 // ==================== TAB NAVIGATION ====================
-
-// Sidebar tab click handlers
 document.querySelectorAll('.sidebar-menu li').forEach(item => {
     item.addEventListener('click', () => {
         const tabId = item.getAttribute('data-tab');
-        if (tabId) {
-            switchTab(tabId);
-        }
+        if (tabId) switchTab(tabId);
     });
 });
-
-// View all links in dashboard
 document.querySelectorAll('.view-all').forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
         const tabId = link.getAttribute('data-tab');
-        if (tabId) {
-            switchTab(tabId);
-        }
+        if (tabId) switchTab(tabId);
     });
 });
 
-// Switch between tabs
 function switchTab(tabId) {
-    // Remove active class from all tabs and menu items
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.sidebar-menu li').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // Add active class to selected tab and menu item
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.sidebar-menu li').forEach(item => item.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
     document.querySelector(`.sidebar-menu li[data-tab="${tabId}"]`).classList.add('active');
-    
     activeTab = tabId;
-    
-    // Load tab-specific data
-    switch(tabId) {
-        case 'donors':
-            loadDonors();
-            break;
-        case 'requests':
-            loadRequests();
-            break;
-        case 'inventory':
-            loadInventory();
-            break;
-        case 'events':
-            loadEvents();
-            break;
-        case 'admins':
-            loadAdmins();
-            break;
-        case 'settings':
-            loadSettings();
-            break;
-    }
+    if (tabId === 'donors') loadDonors();
+    else if (tabId === 'requests') loadAllRequests();
+    else if (tabId === 'inventory') loadInventory();
+    else if (tabId === 'events') loadEvents();
+    else if (tabId === 'admins') loadAdmins();
+    else if (tabId === 'settings') loadSettings();
 }
 
-// ==================== DASHBOARD FUNCTIONS ====================
-
-// Load dashboard data
+// ==================== DASHBOARD ====================
 async function loadDashboardData() {
     try {
-        // Get counts
-        const donorsSnapshot = await getDocs(collection(db, 'donors'));
-        document.getElementById('totalDonors').textContent = donorsSnapshot.size;
-        
-        const requestsQuery = query(
-            collection(db, 'requests'), 
-            where('status', '==', 'pending')
-        );
-        const requestsSnapshot = await getDocs(requestsQuery);
-        document.getElementById('pendingRequests').textContent = requestsSnapshot.size;
-        
-        // Get total blood bags
-        const inventorySnapshot = await getDocs(collection(db, 'inventory'));
-        let totalBags = 0;
-        inventorySnapshot.forEach(doc => {
-            totalBags += doc.data().bags || 0;
-        });
+        const donorsSnap = await getDocs(collection(db, 'donors'));
+        document.getElementById('totalDonors').textContent = donorsSnap.size;
+        const publicPending = await getDocs(query(collection(db, 'public_requests'), where('status', '==', 'pending')));
+        const bankPending = await getDocs(query(collection(db, 'bank_requests'), where('status', '==', 'pending')));
+        const pendingTotal = publicPending.size + bankPending.size;
+        document.getElementById('pendingRequests').textContent = pendingTotal;
+        document.getElementById('requestsBadge').textContent = pendingTotal;
+        const invSnap = await getDocs(collection(db, 'inventory'));
+        let totalBags = 0; invSnap.forEach(d => totalBags += d.data().bags || 0);
         document.getElementById('totalBags').textContent = totalBags;
-        
-        // Get upcoming events
-        const eventsQuery = query(
-            collection(db, 'events'),
-            where('status', '==', 'upcoming'),
-            orderBy('date', 'asc')
-        );
-        const eventsSnapshot = await getDocs(eventsQuery);
-        document.getElementById('upcomingEvents').textContent = eventsSnapshot.size;
-        
-        // Update badges
-        document.getElementById('donorsBadge').textContent = donorsSnapshot.size;
-        document.getElementById('requestsBadge').textContent = requestsSnapshot.size;
-        
-        // Load recent donors
+        const eventsSnap = await getDocs(query(collection(db, 'events'), where('status', '==', 'upcoming')));
+        document.getElementById('upcomingEvents').textContent = eventsSnap.size;
+        document.getElementById('donorsBadge').textContent = donorsSnap.size;
         loadRecentDonors();
-        
-        // Load recent requests
         loadRecentRequests();
-        
-        // Load inventory bars
         loadInventoryBars();
-        
-    } catch (error) {
-        console.error('Error loading dashboard:', error);
-    }
+    } catch (error) { console.error(error); }
 }
 
-// Load recent donors for dashboard
 async function loadRecentDonors() {
-    try {
-        const donorsQuery = query(
-            collection(db, 'donors'),
-            orderBy('createdAt', 'desc'),
-            limit(5)
-        );
-        
-        const snapshot = await getDocs(donorsQuery);
-        const container = document.getElementById('recentDonors');
-        
-        if (snapshot.empty) {
-            container.innerHTML = '<p class="no-data">No recent donors</p>';
-            return;
-        }
-        
-        let html = '';
-        snapshot.forEach(doc => {
-            const donor = doc.data();
-            html += `
-                <div class="recent-item">
-                    <div class="recent-info">
-                        <h4>${donor.name || 'Unknown'}</h4>
-                        <p>${donor.bloodGroup || 'N/A'} • ${donor.area || 'N/A'}</p>
-                    </div>
-                    <span class="recent-badge ${donor.eligible ? 'eligible' : 'pending'}">
-                        ${donor.eligible ? 'Eligible' : 'Ineligible'}
-                    </span>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('Error loading recent donors:', error);
-        document.getElementById('recentDonors').innerHTML = '<p class="error">Error loading donors</p>';
-    }
+    const snap = await getDocs(query(collection(db, 'donors'), orderBy('createdAt', 'desc'), limit(5)));
+    const container = document.getElementById('recentDonors');
+    if (snap.empty) { container.innerHTML = '<p class="no-data">No recent donors</p>'; return; }
+    let html = '';
+    snap.forEach(doc => {
+        const donor = doc.data();
+        html += `<div class="recent-item"><div class="recent-info"><h4>${donor.name}</h4><p>${donor.bloodGroup} • ${donor.area}</p></div><span class="recent-badge ${donor.eligible ? 'eligible' : 'pending'}">${donor.eligible ? 'Eligible' : 'Ineligible'}</span></div>`;
+    });
+    container.innerHTML = html;
 }
 
-// Load recent requests for dashboard
 async function loadRecentRequests() {
-    try {
-        const requestsQuery = query(
-            collection(db, 'requests'),
-            orderBy('createdAt', 'desc'),
-            limit(5)
-        );
-        
-        const snapshot = await getDocs(requestsQuery);
-        const container = document.getElementById('recentRequests');
-        
-        if (snapshot.empty) {
-            container.innerHTML = '<p class="no-data">No recent requests</p>';
-            return;
-        }
-        
-        let html = '';
-        snapshot.forEach(doc => {
-            const request = doc.data();
-            html += `
-                <div class="recent-item">
-                    <div class="recent-info">
-                        <h4>${request.patientName || 'Unknown'}</h4>
-                        <p>${request.bloodGroup || 'N/A'} • ${request.bags || 0} bags</p>
-                    </div>
-                    <span class="recent-badge ${request.status || 'pending'}">
-                        ${request.status || 'pending'}
-                    </span>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('Error loading recent requests:', error);
-        document.getElementById('recentRequests').innerHTML = '<p class="error">Error loading requests</p>';
-    }
+    const publicSnap = await getDocs(query(collection(db, 'public_requests'), orderBy('createdAt', 'desc'), limit(3)));
+    const bankSnap = await getDocs(query(collection(db, 'bank_requests'), orderBy('createdAt', 'desc'), limit(2)));
+    const container = document.getElementById('recentRequests');
+    let html = '';
+    publicSnap.forEach(doc => {
+        const req = doc.data();
+        html += `<div class="recent-item"><div class="recent-info"><h4>${req.patientName}</h4><p>${req.bloodGroup} • ${req.bags} bags</p></div><span class="recent-badge ${req.status}">Public</span></div>`;
+    });
+    bankSnap.forEach(doc => {
+        const req = doc.data();
+        html += `<div class="recent-item"><div class="recent-info"><h4>${req.patientName}</h4><p>${req.bloodGroup} • ${req.bags} bags (Bank)</p></div><span class="recent-badge ${req.status}">Bank</span></div>`;
+    });
+    container.innerHTML = html || '<p class="no-data">No recent requests</p>';
 }
 
-// Load inventory bars for dashboard
 async function loadInventoryBars() {
-    try {
-        const snapshot = await getDocs(collection(db, 'inventory'));
-        const container = document.getElementById('inventoryBars');
-        
-        if (snapshot.empty) {
-            container.innerHTML = '<p class="no-data">No inventory data</p>';
-            return;
-        }
-        
-        // Find max bags for scaling
-        let maxBags = 0;
-        const inventory = [];
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const bags = data.bags || 0;
-            maxBags = Math.max(maxBags, bags);
-            inventory.push({ group: doc.id, ...data });
-        });
-        
-        // Sort by blood group
-        const bloodOrder = ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'];
-        inventory.sort((a, b) => bloodOrder.indexOf(a.group) - bloodOrder.indexOf(b.group));
-        
-        let html = '';
-        inventory.forEach(item => {
-            const percentage = maxBags > 0 ? (item.bags / maxBags) * 100 : 0;
-            html += `
-                <div class="inventory-bar-item">
-                    <span class="bar-label">${item.group}</span>
-                    <div class="bar-container">
-                        <div class="bar-fill" style="width: ${percentage}%">
-                            ${percentage > 15 ? item.bags + ' bags' : ''}
-                        </div>
-                    </div>
-                    <span class="bar-value">${item.bags}</span>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('Error loading inventory bars:', error);
-        document.getElementById('inventoryBars').innerHTML = '<p class="error">Error loading inventory</p>';
-    }
+    const snap = await getDocs(collection(db, 'inventory'));
+    const container = document.getElementById('inventoryBars');
+    if (snap.empty) { container.innerHTML = '<p>No inventory</p>'; return; }
+    let maxBags = 0; const inv = [];
+    snap.forEach(doc => { const bags = doc.data().bags || 0; maxBags = Math.max(maxBags, bags); inv.push({ group: doc.id, bags }); });
+    inv.sort((a,b) => ['O-','O+','A-','A+','B-','B+','AB-','AB+'].indexOf(a.group) - ['O-','O+','A-','A+','B-','B+','AB-','AB+'].indexOf(b.group));
+    let html = '';
+    inv.forEach(item => {
+        const percent = maxBags > 0 ? (item.bags / maxBags) * 100 : 0;
+        html += `<div class="inventory-bar-item"><span class="bar-label">${item.group}</span><div class="bar-container"><div class="bar-fill" style="width: ${percent}%">${percent > 15 ? item.bags + ' bags' : ''}</div></div><span class="bar-value">${item.bags}</span></div>`;
+    });
+    container.innerHTML = html;
 }
 
-// ==================== DONORS FUNCTIONS ====================
-
-// Load donors with filters
+// ==================== DONORS ====================
 async function loadDonors() {
     try {
-        const searchInput = document.getElementById('donorSearch');
-        const bloodFilter = document.getElementById('donorBloodFilter');
-        const eligibleFilter = document.getElementById('donorEligibleFilter');
-        
-        let donorsQuery = query(collection(db, 'donors'), orderBy('createdAt', 'desc'));
-        
-        // Apply filters if they have values
-        if (bloodFilter.value) {
-            donorsQuery = query(donorsQuery, where('bloodGroup', '==', bloodFilter.value));
-        }
-        
-        if (eligibleFilter.value) {
-            donorsQuery = query(donorsQuery, where('eligible', '==', eligibleFilter.value === 'true'));
-        }
-        
-        const snapshot = await getDocs(donorsQuery);
+        const search = document.getElementById('donorSearch').value.toLowerCase();
+        const bloodFilter = document.getElementById('donorBloodFilter').value;
+        const eligibleFilter = document.getElementById('donorEligibleFilter').value;
+        let q = query(collection(db, 'donors'), orderBy('createdAt', 'desc'));
+        if (bloodFilter) q = query(q, where('bloodGroup', '==', bloodFilter));
+        if (eligibleFilter !== '') q = query(q, where('eligible', '==', eligibleFilter === 'true'));
+        const snap = await getDocs(q);
         const tbody = document.getElementById('donorsTableBody');
-        
-        if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="8" class="no-data">No donors found</td></tr>';
-            return;
-        }
-        
+        if (snap.empty) { tbody.innerHTML = '<tr><td colspan="8" class="no-data">No donors found</td></tr>'; return; }
         let html = '';
-        snapshot.forEach(doc => {
-            const donor = doc.data();
-            const donorId = doc.id;
-            
-            // Apply search filter client-side for better UX
-            if (searchInput.value) {
-                const searchTerm = searchInput.value.toLowerCase();
-                const name = (donor.name || '').toLowerCase();
-                const phone = (donor.phone || '').toLowerCase();
-                const area = (donor.area || '').toLowerCase();
-                
-                if (!name.includes(searchTerm) && !phone.includes(searchTerm) && !area.includes(searchTerm)) {
-                    return;
-                }
-            }
-            
-            const lastDonation = donor.lastDonation ? new Date(donor.lastDonation).toLocaleDateString() : 'Never';
-            const createdAt = donor.createdAt ? new Date(donor.createdAt.toDate()).toLocaleDateString() : 'Unknown';
-            
-            html += `
-                <tr>
-                    <td>${donor.name || 'Unknown'}</td>
-                    <td><strong>${donor.bloodGroup || 'N/A'}</strong></td>
-                    <td>${donor.age || '?'} / ${donor.gender || 'N/A'}</td>
-                    <td>${donor.area || 'N/A'}</td>
-                    <td>${donor.phone || 'N/A'}<br><small>${donor.email || ''}</small></td>
-                    <td>${lastDonation}</td>
-                    <td>
-                        <span class="eligible-badge ${donor.eligible}">
-                            ${donor.eligible ? 'Eligible' : 'Ineligible'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="action-btn view" onclick="viewDonor('${donorId}')">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        <button class="action-btn edit" onclick="editDonor('${donorId}')">
-                            <i class="fa-solid fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="deleteDonor('${donorId}')">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+        snap.forEach(doc => {
+            const d = doc.data();
+            if (search && !d.name?.toLowerCase().includes(search) && !d.phone?.includes(search) && !d.area?.toLowerCase().includes(search)) return;
+            html += `<tr><td>${d.name}</td><td><strong>${d.bloodGroup}</strong></td><td>${d.age}/${d.gender}</td><td>${d.area}</td><td>${d.phone}<br><small>${d.email || ''}</small></td><td>${d.lastDonation ? new Date(d.lastDonation).toLocaleDateString() : 'Never'}</td><td><span class="eligible-badge ${d.eligible}">${d.eligible ? 'Eligible' : 'Ineligible'}</span></td><td><button class="action-btn edit" onclick="editDonor('${doc.id}')"><i class="fa-solid fa-edit"></i></button><button class="action-btn delete" onclick="deleteDonor('${doc.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
         });
-        
-        tbody.innerHTML = html || '<tr><td colspan="8" class="no-data">No matching donors found</td></tr>';
-        
-    } catch (error) {
-        console.error('Error loading donors:', error);
-        document.getElementById('donorsTableBody').innerHTML = '<tr><td colspan="8" class="error">Error loading donors</td></tr>';
-    }
+        tbody.innerHTML = html || '<tr><td colspan="8">No matching donors</td></tr>';
+    } catch (error) { console.error(error); document.getElementById('donorsTableBody').innerHTML = '<tr><td colspan="8">Error loading donors</td></tr>'; }
 }
 
-// Add event listeners for donor filters
-document.getElementById('donorSearch')?.addEventListener('input', debounce(loadDonors, 300));
-document.getElementById('donorBloodFilter')?.addEventListener('change', loadDonors);
-document.getElementById('donorEligibleFilter')?.addEventListener('change', loadDonors);
-
-// View donor details
-window.viewDonor = function(donorId) {
-    // Implement donor details modal
-    alert('View donor: ' + donorId);
-};
-
-// Edit donor
-window.editDonor = async function(donorId) {
-    try {
-        const donorDoc = await getDoc(doc(db, 'donors', donorId));
-        if (donorDoc.exists()) {
-            const donor = donorDoc.data();
-            // Open edit modal with donor data
-            // You can implement a modal for editing donor details
-            alert('Edit donor: ' + donorId + '\nThis would open an edit form with pre-filled data.');
-        }
-    } catch (error) {
-        console.error('Error fetching donor:', error);
+window.editDonor = async function(id) {
+    const docSnap = await getDoc(doc(db, 'donors', id));
+    if (docSnap.exists()) {
+        const d = docSnap.data();
+        document.getElementById('editDonorId').value = id;
+        document.getElementById('editDonorName').value = d.name || '';
+        document.getElementById('editDonorBloodGroup').value = d.bloodGroup || '';
+        document.getElementById('editDonorAge').value = d.age || '';
+        document.getElementById('editDonorGender').value = d.gender || 'Male';
+        document.getElementById('editDonorPhone').value = d.phone || '';
+        document.getElementById('editDonorEmail').value = d.email || '';
+        document.getElementById('editDonorArea').value = d.area || '';
+        document.getElementById('editDonorDistrict').value = d.district || '';
+        document.getElementById('editDonorLastDonation').value = d.lastDonation || '';
+        document.getElementById('editDonorEligible').value = d.eligible ? 'true' : 'false';
+        document.getElementById('donorEditModal').style.display = 'block';
     }
 };
 
-// Delete donor
-window.deleteDonor = async function(donorId) {
-    if (confirm('Are you sure you want to delete this donor? This action cannot be undone.')) {
-        try {
-            await deleteDoc(doc(db, 'donors', donorId));
-            loadDonors(); // Refresh the list
-            showNotification('Donor deleted successfully', 'success');
-        } catch (error) {
-            console.error('Error deleting donor:', error);
-            showNotification('Error deleting donor', 'error');
-        }
+document.getElementById('donorEditForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editDonorId').value;
+    const data = {
+        name: document.getElementById('editDonorName').value,
+        bloodGroup: document.getElementById('editDonorBloodGroup').value,
+        age: parseInt(document.getElementById('editDonorAge').value) || null,
+        gender: document.getElementById('editDonorGender').value,
+        phone: document.getElementById('editDonorPhone').value,
+        email: document.getElementById('editDonorEmail').value,
+        area: document.getElementById('editDonorArea').value,
+        district: document.getElementById('editDonorDistrict').value,
+        lastDonation: document.getElementById('editDonorLastDonation').value || null,
+        eligible: document.getElementById('editDonorEligible').value === 'true',
+        updatedAt: serverTimestamp()
+    };
+    await updateDoc(doc(db, 'donors', id), data);
+    closeDonorEditModal();
+    loadDonors();
+    showNotification('Donor updated', 'success');
+});
+
+window.deleteDonor = async function(id) {
+    if (confirm('Delete this donor?')) {
+        await deleteDoc(doc(db, 'donors', id));
+        loadDonors();
+        showNotification('Donor deleted', 'success');
     }
 };
 
-// Export donors to CSV
 window.exportDonors = async function() {
-    try {
-        const snapshot = await getDocs(collection(db, 'donors'));
-        const donors = [];
-        snapshot.forEach(doc => donors.push({ id: doc.id, ...doc.data() }));
-        
-        // Convert to CSV
-        const headers = ['Name', 'Blood Group', 'Age', 'Gender', 'Phone', 'Email', 'Area', 'Eligible', 'Last Donation'];
-        const csvRows = [];
-        csvRows.push(headers.join(','));
-        
-        donors.forEach(donor => {
-            const row = [
-                `"${donor.name || ''}"`,
-                donor.bloodGroup || '',
-                donor.age || '',
-                donor.gender || '',
-                donor.phone || '',
-                donor.email || '',
-                donor.area || '',
-                donor.eligible ? 'Yes' : 'No',
-                donor.lastDonation || ''
-            ];
-            csvRows.push(row.join(','));
-        });
-        
-        const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `donors_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        
-    } catch (error) {
-        console.error('Error exporting donors:', error);
-        showNotification('Error exporting donors', 'error');
-    }
+    const snap = await getDocs(collection(db, 'donors'));
+    const donors = []; snap.forEach(d => donors.push(d.data()));
+    const headers = ['Name','Blood Group','Age','Gender','Phone','Email','Area','Eligible','Last Donation'];
+    const rows = donors.map(d => [d.name, d.bloodGroup, d.age, d.gender, d.phone, d.email, d.area, d.eligible ? 'Yes' : 'No', d.lastDonation]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell || ''}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `donors_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(a.href);
 };
 
-// ==================== REQUESTS FUNCTIONS ====================
+// ==================== REQUESTS (Combined) ====================
+async function loadAllRequests() {
+  try {
+    const typeFilter = document.getElementById('requestTypeFilter').value;
+    const statusFilter = document.getElementById('requestStatusFilter').value;
+    const bloodFilter = document.getElementById('requestBloodFilter').value;
 
-// Load requests with filters
-async function loadRequests() {
-    try {
-        const statusFilter = document.getElementById('requestStatusFilter');
-        const bloodFilter = document.getElementById('requestBloodFilter');
-        
-        let requestsQuery = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
-        
-        if (statusFilter.value) {
-            requestsQuery = query(requestsQuery, where('status', '==', statusFilter.value));
-        }
-        
-        if (bloodFilter.value) {
-            requestsQuery = query(requestsQuery, where('bloodGroup', '==', bloodFilter.value));
-        }
-        
-        const snapshot = await getDocs(requestsQuery);
-        const tbody = document.getElementById('requestsTableBody');
-        
-        if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="8" class="no-data">No requests found</td></tr>';
-            return;
-        }
-        
-        let html = '';
-        snapshot.forEach(doc => {
-            const request = doc.data();
-            const requestId = doc.id;
-            
-            const neededBy = request.neededBy ? new Date(request.neededBy.toDate()).toLocaleDateString() : 'Urgent';
-            const createdAt = request.createdAt ? new Date(request.createdAt.toDate()).toLocaleString() : 'Unknown';
-            
-            html += `
-                <tr>
-                    <td>${request.patientName || 'Unknown'}</td>
-                    <td><strong>${request.bloodGroup || 'N/A'}</strong></td>
-                    <td>${request.bags || 0}</td>
-                    <td>${request.hospital || 'N/A'}</td>
-                    <td>${request.phone || 'N/A'}</td>
-                    <td>${neededBy}</td>
-                    <td>
-                        <span class="status-badge ${request.status || 'pending'}">
-                            ${request.status || 'pending'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="action-btn view" onclick="viewRequest('${requestId}')">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        <button class="action-btn approve" onclick="updateRequestStatus('${requestId}', 'approved')">
-                            <i class="fa-solid fa-check"></i>
-                        </button>
-                        <button class="action-btn edit" onclick="editRequest('${requestId}')">
-                            <i class="fa-solid fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="deleteRequest('${requestId}')">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        tbody.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading requests:', error);
-        document.getElementById('requestsTableBody').innerHTML = '<tr><td colspan="8" class="error">Error loading requests</td></tr>';
+    let publicReqs = [], bankReqs = [];
+    if (typeFilter === 'all' || typeFilter === 'public') {
+      let q = query(collection(db, 'public_requests'), orderBy('createdAt', 'desc'));
+      if (statusFilter) q = query(q, where('status', '==', statusFilter));
+      if (bloodFilter) q = query(q, where('bloodGroup', '==', bloodFilter));
+      const snap = await getDocs(q);
+      snap.forEach(d => publicReqs.push({ id: d.id, type: 'public', ...d.data() }));
     }
+    if (typeFilter === 'all' || typeFilter === 'bank') {
+      let q = query(collection(db, 'bank_requests'), orderBy('createdAt', 'desc'));
+      if (statusFilter) q = query(q, where('status', '==', statusFilter));
+      if (bloodFilter) q = query(q, where('bloodGroup', '==', bloodFilter));
+      const snap = await getDocs(q);
+      snap.forEach(d => bankReqs.push({ id: d.id, type: 'bank', ...d.data() }));
+    }
+    const all = [...publicReqs, ...bankReqs].sort((a,b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+    const tbody = document.getElementById('requestsTableBody');
+    if (all.length === 0) { tbody.innerHTML = '<tr><td colspan="9">No requests found</td></tr>'; return; }
+    let html = '';
+    all.forEach(req => {
+      const neededBy = req.neededBy ? new Date(req.neededBy).toLocaleDateString() : (req.neededByDate ? new Date(req.neededByDate).toLocaleDateString() : 'Urgent');
+      const returnInfo = req.type === 'bank' ? `<br><small>Return: ${req.returnGroup}</small>` : '';
+      html += `<tr>
+        <td><span class="status-badge">${req.type === 'public' ? 'Public' : 'Bank'}${returnInfo}</span></td>
+        <td>${req.patientName}</td>
+        <td><strong>${req.bloodGroup}</strong></td>
+        <td>${req.bags}</td>
+        <td>${req.hospital || req.location}</td>
+        <td>${req.phone}</td>
+        <td>${neededBy}</td>
+        <td><span class="status-badge ${req.status}">${req.status}</span></td>
+        <td>
+          <button class="action-btn approve" onclick="approveRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-check"></i></button>
+          <button class="action-btn reject" onclick="rejectRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-times"></i></button>
+          <button class="action-btn edit" onclick="editRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-edit"></i></button>
+          <button class="action-btn delete" onclick="deleteRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+    });
+    tbody.innerHTML = html;
+  } catch (error) { console.error(error); }
 }
 
-// Add event listeners for request filters
-document.getElementById('requestStatusFilter')?.addEventListener('change', loadRequests);
-document.getElementById('requestBloodFilter')?.addEventListener('change', loadRequests);
-
-// View request details
-window.viewRequest = function(requestId) {
-    alert('View request: ' + requestId);
+window.approveRequest = async function(id, type) {
+    const collectionName = type === 'public' ? 'public_requests' : 'bank_requests';
+    await updateDoc(doc(db, collectionName, id), { status: 'approved', updatedAt: serverTimestamp() });
+    loadAllRequests();
+    showNotification('Request approved', 'success');
 };
 
-// Update request status
-window.updateRequestStatus = async function(requestId, status) {
-    try {
-        await updateDoc(doc(db, 'requests', requestId), {
-            status: status,
-            updatedAt: serverTimestamp()
-        });
-        loadRequests(); // Refresh the list
-        showNotification(`Request ${status} successfully`, 'success');
-    } catch (error) {
-        console.error('Error updating request:', error);
-        showNotification('Error updating request', 'error');
-    }
+window.rejectRequest = async function(id, type) {
+    const collectionName = type === 'public' ? 'public_requests' : 'bank_requests';
+    await updateDoc(doc(db, collectionName, id), { status: 'rejected', updatedAt: serverTimestamp() });
+    loadAllRequests();
+    showNotification('Request rejected', 'success');
 };
 
-// Edit request
-window.editRequest = function(requestId) {
-    alert('Edit request: ' + requestId);
-};
-
-// Delete request
-window.deleteRequest = async function(requestId) {
-    if (confirm('Are you sure you want to delete this request?')) {
-        try {
-            await deleteDoc(doc(db, 'requests', requestId));
-            loadRequests();
-            showNotification('Request deleted successfully', 'success');
-        } catch (error) {
-            console.error('Error deleting request:', error);
-            showNotification('Error deleting request', 'error');
+window.editRequest = async function(id, type) {
+    const docSnap = await getDoc(doc(db, type === 'public' ? 'public_requests' : 'bank_requests', id));
+    if (docSnap.exists()) {
+        const r = docSnap.data();
+        document.getElementById('editRequestId').value = id;
+        document.getElementById('editRequestType').value = type;
+        document.getElementById('editRequestPatient').value = r.patientName;
+        document.getElementById('editRequestBloodGroup').value = r.bloodGroup;
+        document.getElementById('editRequestBags').value = r.bags;
+        document.getElementById('editRequestHospital').value = r.hospital || r.location;
+        document.getElementById('editRequestPhone').value = r.phone;
+        document.getElementById('editRequestStatus').value = r.status;
+        if (type === 'bank') {
+            document.getElementById('returnGroupField').style.display = 'block';
+            document.getElementById('editRequestReturnGroup').value = r.returnGroup || '';
+        } else {
+            document.getElementById('returnGroupField').style.display = 'none';
         }
+        document.getElementById('requestEditModal').style.display = 'block';
     }
 };
 
-// ==================== INVENTORY FUNCTIONS ====================
+document.getElementById('requestEditForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editRequestId').value;
+    const type = document.getElementById('editRequestType').value;
+    const data = {
+        patientName: document.getElementById('editRequestPatient').value,
+        bloodGroup: document.getElementById('editRequestBloodGroup').value,
+        bags: parseInt(document.getElementById('editRequestBags').value),
+        hospital: document.getElementById('editRequestHospital').value,
+        phone: document.getElementById('editRequestPhone').value,
+        status: document.getElementById('editRequestStatus').value,
+        updatedAt: serverTimestamp()
+    };
+    if (type === 'bank') data.returnGroup = document.getElementById('editRequestReturnGroup').value;
+    await updateDoc(doc(db, type === 'public' ? 'public_requests' : 'bank_requests', id), data);
+    closeRequestEditModal();
+    loadAllRequests();
+    showNotification('Request updated', 'success');
+});
 
-// Load inventory
+window.deleteRequest = async function(id, type) {
+    if (confirm('Delete this request?')) {
+        await deleteDoc(doc(db, type === 'public' ? 'public_requests' : 'bank_requests', id));
+        loadAllRequests();
+        showNotification('Request deleted', 'success');
+    }
+};
+
+// ==================== INVENTORY ====================
 async function loadInventory() {
     try {
-        const snapshot = await getDocs(collection(db, 'inventory'));
+        const snap = await getDocs(collection(db, 'inventory'));
         const grid = document.getElementById('inventoryGrid');
-        
-        if (snapshot.empty) {
-            grid.innerHTML = '<p class="no-data">No inventory data</p>';
-            return;
-        }
-        
+        if (snap.empty) { grid.innerHTML = '<p class="no-data">No inventory data</p>'; return; }
         let html = '';
-        snapshot.forEach(doc => {
-            const inventory = doc.data();
-            const lastUpdated = inventory.lastUpdated ? 
-                new Date(inventory.lastUpdated.toDate()).toLocaleString() : 'Never';
-            
-            html += `
-                <div class="inventory-card">
-                    <h3>${doc.id}</h3>
-                    <div class="bags">${inventory.bags || 0} bags</div>
-                    <div class="last-updated">
-                        <i class="fa-regular fa-clock"></i> ${lastUpdated}
-                    </div>
-                    <div class="inventory-actions">
-                        <button class="action-btn edit" onclick="openInventoryModal('${doc.id}')">
-                            <i class="fa-solid fa-pen"></i> Update
-                        </button>
-                    </div>
-                </div>
-            `;
+        snap.forEach(doc => {
+            const inv = doc.data();
+            const lastUpdated = inv.lastUpdated ? new Date(inv.lastUpdated.toDate()).toLocaleString() : 'Never';
+            html += `<div class="inventory-card"><h3>${doc.id}</h3><div class="bags">${inv.bags} bags</div><div class="last-updated"><i class="fa-regular fa-clock"></i> ${lastUpdated}</div><button class="action-btn edit" onclick="openInventoryModal('${doc.id}')"><i class="fa-solid fa-pen"></i> Update</button></div>`;
         });
-        
         grid.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading inventory:', error);
-        document.getElementById('inventoryGrid').innerHTML = '<p class="error">Error loading inventory</p>';
-    }
+    } catch (error) { console.error(error); document.getElementById('inventoryGrid').innerHTML = '<p class="error">Error loading inventory</p>'; }
 }
 
-// Open inventory modal
-window.openInventoryModal = function(bloodGroup = '') {
-    const modal = document.getElementById('inventoryModal');
+window.openInventoryModal = async function(bloodGroup = '') {
     if (bloodGroup) {
-        document.getElementById('inventoryBloodGroup').value = bloodGroup;
-        // Load current bags count
-        getDoc(doc(db, 'inventory', bloodGroup)).then(doc => {
-            if (doc.exists()) {
-                document.getElementById('inventoryBags').value = doc.data().bags || 0;
-                document.getElementById('inventoryNotes').value = doc.data().notes || '';
-            }
-        });
+        const docSnap = await getDoc(doc(db, 'inventory', bloodGroup));
+        if (docSnap.exists()) {
+            document.getElementById('inventoryBloodGroup').value = bloodGroup;
+            document.getElementById('inventoryBags').value = docSnap.data().bags || 0;
+            document.getElementById('inventoryNotes').value = docSnap.data().notes || '';
+        }
     } else {
         document.getElementById('inventoryForm').reset();
     }
-    modal.style.display = 'block';
+    document.getElementById('inventoryModal').style.display = 'block';
 };
 
-// Close inventory modal
-window.closeInventoryModal = function() {
-    document.getElementById('inventoryModal').style.display = 'none';
-};
-
-// Inventory form submit
 document.getElementById('inventoryForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    const bloodGroup = document.getElementById('inventoryBloodGroup').value;
+    const group = document.getElementById('inventoryBloodGroup').value;
     const bags = parseInt(document.getElementById('inventoryBags').value);
     const notes = document.getElementById('inventoryNotes').value;
-    
-    try {
-        const inventoryRef = doc(db, 'inventory', bloodGroup);
-        await setDoc(inventoryRef, {
-            group: bloodGroup,
-            bags: bags,
-            notes: notes,
-            lastUpdated: serverTimestamp()
-        }, { merge: true });
-        
-        closeInventoryModal();
-        loadInventory();
-        loadInventoryBars(); // Update dashboard
-        showNotification('Inventory updated successfully', 'success');
-    } catch (error) {
-        console.error('Error updating inventory:', error);
-        showNotification('Error updating inventory', 'error');
-    }
+    await setDoc(doc(db, 'inventory', group), { group, bags, notes, lastUpdated: serverTimestamp() }, { merge: true });
+    closeInventoryModal();
+    loadInventory();
+    loadInventoryBars();
+    showNotification('Inventory updated', 'success');
 });
 
-// ==================== EVENTS FUNCTIONS ====================
-
-// Load events
+// ==================== EVENTS ====================
 async function loadEvents() {
     try {
-        const eventsQuery = query(collection(db, 'events'), orderBy('date', 'desc'));
-        const snapshot = await getDocs(eventsQuery);
+        const snap = await getDocs(query(collection(db, 'events'), orderBy('date', 'desc')));
         const grid = document.getElementById('eventsGrid');
-        
-        if (snapshot.empty) {
-            grid.innerHTML = '<p class="no-data">No events found</p>';
-            return;
-        }
-        
+        if (snap.empty) { grid.innerHTML = '<p class="no-data">No events found</p>'; return; }
         let html = '';
-        snapshot.forEach(doc => {
-            const event = doc.data();
-            const eventId = doc.id;
-            
-            const eventDate = event.date ? new Date(event.date).toLocaleDateString() : 'TBD';
-            const firstImage = event.images && event.images.length > 0 ? event.images[0] : 'images/event-placeholder.jpg';
-            
-            html += `
-                <div class="event-admin-card">
-                    <div class="event-images-preview">
-                        <img src="${firstImage}" alt="${event.title}">
-                    </div>
-                    <div class="event-admin-info">
-                        <h3>${event.title || 'Untitled Event'}</h3>
-                        <div class="event-meta">
-                            <span><i class="fa-regular fa-calendar"></i> ${eventDate}</span>
-                            <span><i class="fa-regular fa-clock"></i> ${event.time || 'N/A'}</span>
-                        </div>
-                        <div class="event-meta">
-                            <span><i class="fa-solid fa-location-dot"></i> ${event.location || 'N/A'}</span>
-                        </div>
-                        <p class="event-description">${(event.description || '').substring(0, 100)}...</p>
-                        <div class="event-admin-actions">
-                            <button class="action-btn view" onclick="viewEvent('${eventId}')">
-                                <i class="fa-solid fa-eye"></i> View
-                            </button>
-                            <button class="action-btn edit" onclick="openEventModal('${eventId}')">
-                                <i class="fa-solid fa-edit"></i> Edit
-                            </button>
-                            <button class="action-btn delete" onclick="deleteEvent('${eventId}')">
-                                <i class="fa-solid fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+        snap.forEach(doc => {
+            const ev = doc.data();
+            const firstImage = ev.images?.[0] || 'images/event-placeholder.jpg';
+            html += `<div class="event-admin-card"><div class="event-images-preview"><img src="${firstImage}"></div><div class="event-admin-info"><h3>${ev.title}</h3><div class="event-meta"><i class="fa-regular fa-calendar"></i> ${ev.date} | ${ev.time}</div><p><i class="fa-solid fa-location-dot"></i> ${ev.location}</p><div class="event-admin-actions"><button class="action-btn edit" onclick="openEventModal('${doc.id}')"><i class="fa-solid fa-edit"></i> Edit</button><button class="action-btn delete" onclick="deleteEvent('${doc.id}')"><i class="fa-solid fa-trash"></i> Delete</button></div></div></div>`;
         });
-        
         grid.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading events:', error);
-        document.getElementById('eventsGrid').innerHTML = '<p class="error">Error loading events</p>';
-    }
+    } catch (error) { console.error(error); document.getElementById('eventsGrid').innerHTML = '<p class="error">Error loading events</p>'; }
 }
 
-// Open event modal for add/edit
 window.openEventModal = async function(eventId = null) {
-    const modal = document.getElementById('eventModal');
-    const form = document.getElementById('eventForm');
-    form.reset();
-    
     if (eventId) {
-        // Load event data for editing
-        try {
-            const eventDoc = await getDoc(doc(db, 'events', eventId));
-            if (eventDoc.exists()) {
-                const event = eventDoc.data();
-                document.getElementById('eventTitle').value = event.title || '';
-                document.getElementById('eventDate').value = event.date || '';
-                document.getElementById('eventTime').value = event.time || '';
-                document.getElementById('eventLocation').value = event.location || '';
-                document.getElementById('eventDescription').value = event.description || '';
-                
-                // Store eventId in form for update
-                form.dataset.eventId = eventId;
-                
-                // Show existing images
-                if (event.images && event.images.length > 0) {
-                    const existingImagesDiv = document.getElementById('existingImages');
-                    let imagesHtml = '<p>Existing images:</p>';
-                    event.images.forEach((imageUrl, index) => {
-                        imagesHtml += `
-                            <div class="existing-image-item">
-                                <img src="${imageUrl}" alt="Event image ${index + 1}">
-                                <span class="remove-image" onclick="removeEventImage('${eventId}', ${index})">
-                                    <i class="fa-solid fa-times"></i>
-                                </span>
-                            </div>
-                        `;
-                    });
-                    existingImagesDiv.innerHTML = imagesHtml;
-                }
+        const docSnap = await getDoc(doc(db, 'events', eventId));
+        if (docSnap.exists()) {
+            const ev = docSnap.data();
+            document.getElementById('eventTitle').value = ev.title || '';
+            document.getElementById('eventDate').value = ev.date || '';
+            document.getElementById('eventTime').value = ev.time || '';
+            document.getElementById('eventLocation').value = ev.location || '';
+            document.getElementById('eventDescription').value = ev.description || '';
+            document.getElementById('eventForm').dataset.eventId = eventId;
+            if (ev.images && ev.images.length) {
+                let imagesHtml = '<p>Existing images:</p>';
+                ev.images.forEach((url, idx) => {
+                    imagesHtml += `<div class="existing-image-item"><img src="${url}" width="80"><span class="remove-image" onclick="removeEventImage('${eventId}', ${idx})">✖</span></div>`;
+                });
+                document.getElementById('existingImages').innerHTML = imagesHtml;
+            } else {
+                document.getElementById('existingImages').innerHTML = '';
             }
-        } catch (error) {
-            console.error('Error loading event:', error);
         }
     } else {
-        form.dataset.eventId = '';
+        document.getElementById('eventForm').reset();
+        document.getElementById('eventForm').dataset.eventId = '';
         document.getElementById('existingImages').innerHTML = '';
     }
-    
-    modal.style.display = 'block';
+    document.getElementById('eventModal').style.display = 'block';
 };
 
-// Close event modal
-window.closeEventModal = function() {
-    document.getElementById('eventModal').style.display = 'none';
-    document.getElementById('eventForm').reset();
-    document.getElementById('existingImages').innerHTML = '';
+window.removeEventImage = async function(eventId, idx) {
+    if (confirm('Remove this image?')) {
+        const eventRef = doc(db, 'events', eventId);
+        const eventSnap = await getDoc(eventRef);
+        const images = eventSnap.data().images || [];
+        const toDelete = images[idx];
+        images.splice(idx, 1);
+        await updateDoc(eventRef, { images });
+        if (toDelete) {
+            const storageRef = ref(storage, toDelete);
+            try { await deleteObject(storageRef); } catch(e) { console.warn('Storage delete failed', e); }
+        }
+        openEventModal(eventId);
+    }
 };
 
-// Event form submit
 document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const eventId = e.target.dataset.eventId;
     const title = document.getElementById('eventTitle').value;
     const date = document.getElementById('eventDate').value;
     const time = document.getElementById('eventTime').value;
     const location = document.getElementById('eventLocation').value;
     const description = document.getElementById('eventDescription').value;
-    const imageFiles = document.getElementById('eventImages').files;
-    
-    try {
-        let imageUrls = [];
-        
-        // Upload new images if any
-        if (imageFiles.length > 0) {
-            for (let i = 0; i < imageFiles.length; i++) {
-                const file = imageFiles[i];
-                const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
-                await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(storageRef);
-                imageUrls.push(url);
-            }
+    const files = document.getElementById('eventImages').files;
+    let imageUrls = [];
+    if (files.length) {
+        for (const file of files) {
+            const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            imageUrls.push(url);
         }
-        
-        const eventData = {
-            title,
-            date,
-            time,
-            location,
-            description,
-            updatedAt: serverTimestamp()
-        };
-        
-        // Add images if uploaded
-        if (imageUrls.length > 0) {
-            eventData.images = imageUrls;
-        }
-        
-        if (eventId) {
-            // Update existing event
-            await updateDoc(doc(db, 'events', eventId), eventData);
-        } else {
-            // Create new event
-            eventData.createdAt = serverTimestamp();
-            eventData.status = 'upcoming';
-            await addDoc(collection(db, 'events'), eventData);
-        }
-        
-        closeEventModal();
-        loadEvents();
-        showNotification(`Event ${eventId ? 'updated' : 'created'} successfully`, 'success');
-    } catch (error) {
-        console.error('Error saving event:', error);
-        showNotification('Error saving event', 'error');
     }
+    const data = { title, date, time, location, description, updatedAt: serverTimestamp() };
+    if (imageUrls.length) data.images = imageUrls;
+    if (eventId) {
+        await updateDoc(doc(db, 'events', eventId), data);
+    } else {
+        data.createdAt = serverTimestamp();
+        data.status = 'upcoming';
+        await addDoc(collection(db, 'events'), data);
+    }
+    closeEventModal();
+    loadEvents();
+    showNotification(`Event ${eventId ? 'updated' : 'created'} successfully`, 'success');
 });
 
-// View event
-window.viewEvent = function(eventId) {
-    alert('View event: ' + eventId);
-};
-
-// Delete event
-window.deleteEvent = async function(eventId) {
-    if (confirm('Are you sure you want to delete this event?')) {
-        try {
-            await deleteDoc(doc(db, 'events', eventId));
-            loadEvents();
-            showNotification('Event deleted successfully', 'success');
-        } catch (error) {
-            console.error('Error deleting event:', error);
-            showNotification('Error deleting event', 'error');
-        }
+window.deleteEvent = async function(id) {
+    if (confirm('Delete this event?')) {
+        await deleteDoc(doc(db, 'events', id));
+        loadEvents();
+        showNotification('Event deleted', 'success');
     }
 };
 
-// Remove event image (placeholder - implement actual removal)
-window.removeEventImage = function(eventId, imageIndex) {
-    if (confirm('Remove this image?')) {
-        alert(`Remove image ${imageIndex} from event ${eventId}`);
-        // Implement actual removal logic
-    }
-};
-
-// ==================== ADMINS FUNCTIONS ====================
-
-// Load admins
+// ==================== ADMINS ====================
 async function loadAdmins() {
     try {
-        const snapshot = await getDocs(collection(db, 'admins'));
+        const snap = await getDocs(collection(db, 'admins'));
         const tbody = document.getElementById('adminsTableBody');
-        
-        if (snapshot.empty) {
-            tbody.innerHTML = '<tr><td colspan="6" class="no-data">No admins found</td></tr>';
-            return;
-        }
-        
+        if (snap.empty) { tbody.innerHTML = '<tr><td colspan="6">No admins found</td></tr>'; return; }
         let html = '';
-        snapshot.forEach(doc => {
-            const admin = doc.data();
-            
-            html += `
-                <tr>
-                    <td>${admin.name || 'N/A'}</td>
-                    <td>${doc.id}</td>
-                    <td><span class="status-badge ${admin.role || 'viewer'}">${admin.role || 'viewer'}</span></td>
-                    <td>${admin.lastLogin ? new Date(admin.lastLogin.toDate()).toLocaleString() : 'Never'}</td>
-                    <td>
-                        <span class="eligible-badge ${admin.active}">
-                            ${admin.active ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="action-btn edit" onclick="editAdmin('${doc.id}')">
-                            <i class="fa-solid fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="deleteAdmin('${doc.id}')">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+        snap.forEach(doc => {
+            const a = doc.data();
+            html += `<tr><td>${a.name}</td><td>${doc.id}</td><td>${a.role}</td><td>${a.lastLogin ? new Date(a.lastLogin.toDate()).toLocaleString() : 'Never'}</td><td><span class="eligible-badge ${a.active}">${a.active ? 'Active' : 'Inactive'}</span></td><td><button class="action-btn delete" onclick="deleteAdmin('${doc.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
         });
-        
         tbody.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Error loading admins:', error);
-        document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="6" class="error">Error loading admins</td></tr>';
-    }
+    } catch (error) { console.error(error); document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="6">Error loading admins</td></tr>'; }
 }
 
-// Open admin modal
-window.openAdminModal = function() {
-    document.getElementById('adminModal').style.display = 'block';
-};
-
-// Close admin modal
-window.closeAdminModal = function() {
-    document.getElementById('adminModal').style.display = 'none';
-    document.getElementById('adminForm').reset();
-};
-
-// Admin form submit
+window.openAdminModal = () => { document.getElementById('adminModal').style.display = 'block'; };
 document.getElementById('adminForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const email = document.getElementById('adminEmail').value;
     const name = document.getElementById('adminName').value;
     const role = document.getElementById('adminRole').value;
-    
-    try {
-        await setDoc(doc(db, 'admins', email), {
-            name,
-            role,
-            active: true,
-            createdAt: serverTimestamp()
-        });
-        
-        closeAdminModal();
-        loadAdmins();
-        showNotification('Admin added successfully', 'success');
-    } catch (error) {
-        console.error('Error adding admin:', error);
-        showNotification('Error adding admin', 'error');
-    }
+    await setDoc(doc(db, 'admins', email), { name, role, active: true, createdAt: serverTimestamp() });
+    closeAdminModal();
+    loadAdmins();
+    showNotification('Admin added', 'success');
 });
-
-// Edit admin
-window.editAdmin = function(adminEmail) {
-    alert('Edit admin: ' + adminEmail);
-};
-
-// Delete admin
-window.deleteAdmin = async function(adminEmail) {
-    if (adminEmail === currentUser.email) {
-        showNotification('You cannot delete your own admin account', 'error');
-        return;
-    }
-    
-    if (confirm('Are you sure you want to remove this admin?')) {
-        try {
-            await deleteDoc(doc(db, 'admins', adminEmail));
-            loadAdmins();
-            showNotification('Admin removed successfully', 'success');
-        } catch (error) {
-            console.error('Error deleting admin:', error);
-            showNotification('Error removing admin', 'error');
-        }
+window.deleteAdmin = async (email) => {
+    if (email === currentUser.email) { showNotification('Cannot delete yourself', 'error'); return; }
+    if (confirm('Remove this admin?')) {
+        await deleteDoc(doc(db, 'admins', email));
+        loadAdmins();
+        showNotification('Admin removed', 'success');
     }
 };
 
-// ==================== SETTINGS FUNCTIONS ====================
-
-// Load settings
+// ==================== SETTINGS ====================
 async function loadSettings() {
     try {
-        const settingsDoc = await getDoc(doc(db, 'site_settings', 'general'));
-        if (settingsDoc.exists()) {
-            const settings = settingsDoc.data();
-            document.getElementById('siteName').value = settings.siteName || 'DonateLife';
-            document.getElementById('contactEmail').value = settings.contactEmail || '';
-            document.getElementById('contactPhone').value = settings.contactPhone || '';
-            document.getElementById('address').value = settings.address || '';
-            document.getElementById('facebookUrl').value = settings.facebook || '#';
-            document.getElementById('instagramUrl').value = settings.instagram || '#';
-            document.getElementById('twitterUrl').value = settings.twitter || '#';
-            document.getElementById('donorGuidelines').value = settings.donorGuidelines || '';
-            document.getElementById('recipientGuidelines').value = settings.recipientGuidelines || '';
+        const snap = await getDoc(doc(db, 'site_settings', 'general'));
+        if (snap.exists()) {
+            const s = snap.data();
+            document.getElementById('siteName').value = s.siteName || 'DonateLife';
+            document.getElementById('contactEmail').value = s.contactEmail || '';
+            document.getElementById('contactPhone').value = s.contactPhone || '';
+            document.getElementById('address').value = s.address || '';
+            document.getElementById('facebookUrl').value = s.facebook || '#';
+            document.getElementById('instagramUrl').value = s.instagram || '#';
+            document.getElementById('twitterUrl').value = s.twitter || '#';
+            document.getElementById('donorGuidelines').value = s.donorGuidelines || '';
+            document.getElementById('recipientGuidelines').value = s.recipientGuidelines || '';
         }
-    } catch (error) {
-        console.error('Error loading settings:', error);
-    }
+    } catch (error) { console.error(error); }
 }
 
-// General settings form
 document.getElementById('generalSettingsForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    const settings = {
+    await setDoc(doc(db, 'site_settings', 'general'), {
         siteName: document.getElementById('siteName').value,
         contactEmail: document.getElementById('contactEmail').value,
         contactPhone: document.getElementById('contactPhone').value,
         address: document.getElementById('address').value,
-        updatedAt: serverTimestamp(),
-        updatedBy: currentUser?.email
-    };
-    
-    try {
-        await setDoc(doc(db, 'site_settings', 'general'), settings, { merge: true });
-        showNotification('Settings saved successfully', 'success');
-    } catch (error) {
-        console.error('Error saving settings:', error);
-        showNotification('Error saving settings', 'error');
-    }
+        updatedAt: serverTimestamp()
+    }, { merge: true });
+    showNotification('General settings saved', 'success');
 });
 
-// Social settings form
 document.getElementById('socialSettingsForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    const settings = {
+    await setDoc(doc(db, 'site_settings', 'general'), {
         facebook: document.getElementById('facebookUrl').value,
         instagram: document.getElementById('instagramUrl').value,
         twitter: document.getElementById('twitterUrl').value,
         updatedAt: serverTimestamp()
-    };
-    
-    try {
-        await setDoc(doc(db, 'site_settings', 'general'), settings, { merge: true });
-        showNotification('Social links updated successfully', 'success');
-    } catch (error) {
-        console.error('Error saving social links:', error);
-        showNotification('Error updating social links', 'error');
-    }
+    }, { merge: true });
+    showNotification('Social links updated', 'success');
 });
 
-// Guidelines form
 document.getElementById('guidelinesForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    const settings = {
+    await setDoc(doc(db, 'site_settings', 'general'), {
         donorGuidelines: document.getElementById('donorGuidelines').value,
         recipientGuidelines: document.getElementById('recipientGuidelines').value,
         updatedAt: serverTimestamp()
-    };
-    
-    try {
-        await setDoc(doc(db, 'site_settings', 'general'), settings, { merge: true });
-        showNotification('Guidelines updated successfully', 'success');
-    } catch (error) {
-        console.error('Error saving guidelines:', error);
-        showNotification('Error updating guidelines', 'error');
-    }
+    }, { merge: true });
+    showNotification('Guidelines saved', 'success');
 });
 
-// ==================== REAL-TIME UPDATES ====================
-
-// Set up real-time listeners for badges
+// ==================== REAL-TIME LISTENERS ====================
 function setupRealtimeListeners() {
-    // Listen for donor count changes
-    donorsUnsubscribe = onSnapshot(collection(db, 'donors'), (snapshot) => {
-        document.getElementById('donorsBadge').textContent = snapshot.size;
+    donorsUnsubscribe = onSnapshot(collection(db, 'donors'), (snap) => {
+        document.getElementById('donorsBadge').textContent = snap.size;
     });
-    
-    // Listen for pending requests count changes
-    const pendingQuery = query(collection(db, 'requests'), where('status', '==', 'pending'));
-    requestsUnsubscribe = onSnapshot(pendingQuery, (snapshot) => {
-        document.getElementById('requestsBadge').textContent = snapshot.size;
-    });
-}
-
-// ==================== UTILITY FUNCTIONS ====================
-
-// Debounce function for search inputs
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+    const updatePendingBadge = () => {
+        Promise.all([
+            getDocs(query(collection(db, 'public_requests'), where('status', '==', 'pending'))),
+            getDocs(query(collection(db, 'bank_requests'), where('status', '==', 'pending')))
+        ]).then(([pub, bank]) => {
+            const total = pub.size + bank.size;
+            document.getElementById('requestsBadge').textContent = total;
+            document.getElementById('pendingRequests').textContent = total;
+        }).catch(console.error);
     };
+    onSnapshot(collection(db, 'public_requests'), updatePendingBadge);
+    onSnapshot(collection(db, 'bank_requests'), updatePendingBadge);
 }
 
-// Show notification
+// ==================== UTILITIES ====================
+function debounce(func, wait) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func(...args), wait); }; }
 function showNotification(message, type = 'info') {
-    // Create notification element if it doesn't exist
     let notification = document.getElementById('notification');
     if (!notification) {
         notification = document.createElement('div');
         notification.id = 'notification';
-        notification.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 4px;
-            color: white;
-            font-weight: bold;
-            z-index: 9999;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        `;
         document.body.appendChild(notification);
     }
-    
-    // Set color based on type
-    const colors = {
-        success: '#2ecc71',
-        error: '#e74c3c',
-        warning: '#f39c12',
-        info: '#3498db'
-    };
-    notification.style.backgroundColor = colors[type] || colors.info;
+    const colors = { success: '#2ecc71', error: '#e74c3c', warning: '#f39c12', info: '#3498db' };
+    notification.style.cssText = `position:fixed;top:80px;right:20px;padding:12px 20px;border-radius:4px;color:white;background:${colors[type] || colors.info};z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.2);`;
     notification.textContent = message;
     notification.style.display = 'block';
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 3000);
+    setTimeout(() => notification.style.display = 'none', 3000);
 }
+window.closeDonorEditModal = () => document.getElementById('donorEditModal').style.display = 'none';
+window.closeRequestEditModal = () => document.getElementById('requestEditModal').style.display = 'none';
+window.closeInventoryModal = () => document.getElementById('inventoryModal').style.display = 'none';
+window.closeEventModal = () => document.getElementById('eventModal').style.display = 'none';
+window.closeAdminModal = () => document.getElementById('adminModal').style.display = 'none';
 
-// Add animation style if not exists
-if (!document.getElementById('notificationStyles')) {
-    const style = document.createElement('style');
-    style.id = 'notificationStyles';
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
+// Event listeners for filters
+document.getElementById('donorSearch')?.addEventListener('input', debounce(loadDonors, 300));
+document.getElementById('donorBloodFilter')?.addEventListener('change', loadDonors);
+document.getElementById('donorEligibleFilter')?.addEventListener('change', loadDonors);
+document.getElementById('requestTypeFilter')?.addEventListener('change', loadAllRequests);
+document.getElementById('requestStatusFilter')?.addEventListener('change', loadAllRequests);
+document.getElementById('requestBloodFilter')?.addEventListener('change', loadAllRequests);
 
-// Close modal when clicking outside
 window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
     }
 };
 
-// ==================== INITIALIZATION ====================
-
-// Initialize the page
+// Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // Add keyboard shortcut for refresh (Ctrl+R)
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key === 'r') {
-            e.preventDefault();
-            location.reload();
-        }
-    });
+    // any extra init if needed
 });
+
+
+
+
+
+// Make functions global for inline onclick handlers
+window.loadDonors = loadDonors;
+window.loadAllRequests = loadAllRequests;
+window.loadInventory = loadInventory;
+window.loadEvents = loadEvents;
+window.loadAdmins = loadAdmins;
+window.loadSettings = loadSettings;
+window.exportDonors = exportDonors;
+window.openInventoryModal = openInventoryModal;
+window.openEventModal = openEventModal;
+window.deleteEvent = deleteEvent;
+window.openAdminModal = openAdminModal;
+window.closeDonorEditModal = closeDonorEditModal;
+window.closeRequestEditModal = closeRequestEditModal;
+window.closeInventoryModal = closeInventoryModal;
+window.closeEventModal = closeEventModal;
+window.closeAdminModal = closeAdminModal;

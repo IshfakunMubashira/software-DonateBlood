@@ -86,7 +86,7 @@ form.addEventListener('submit', async (e) => {
     try {
         reqBtn.disabled = true;
         reqBtn.textContent = 'Submitting…';
-        await addDoc(collection(db, 'requests'), {
+        await addDoc(collection(db, 'public_requests'), {
             patientName: v('patientName'),
             bloodGroup:  v('bloodGroup'),
             bags:        parseInt(v('bags')),
@@ -107,7 +107,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Real-time listener — shows all pending requests newest first
-const q = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
+const q = query(collection(db, 'public_requests'), orderBy('createdAt', 'desc'));
 onSnapshot(q, (snapshot) => {
     loadingMsg.style.display = 'none';
     if (snapshot.empty) {

@@ -279,7 +279,7 @@
                 <div class="content-header">
                     <h1><i class="fa-solid fa-hand-holding-heart"></i> Blood Requests</h1>
                     <div class="header-actions">
-                        <button class="btn-refresh" onclick="loadRequests()">
+                        <button class="btn-refresh" onclick="loadAllRequests()">
                             <i class="fa-solid fa-rotate"></i> Refresh
                         </button>
                     </div>
@@ -301,6 +301,11 @@
                         <option>AB+</option><option>AB-</option>
                         <option>O+</option><option>O-</option>
                     </select>
+                    <select id="requestTypeFilter">
+                        <option value="all">All Types</option>
+                        <option value="public">Public Request</option>
+                        <option value="bank">Bank Request</option>
+                    </select>
                 </div>
 
                 <!-- Requests Table -->
@@ -308,6 +313,7 @@
                     <table class="data-table" id="requestsTable">
                         <thead>
                             <tr>
+                                <th>Type</th>
                                 <th>Patient</th>
                                 <th>Blood Group</th>
                                 <th>Bags</th>
@@ -591,6 +597,66 @@
             </form>
         </div>
     </div>
+
+    <!-- Donor Edit Modal -->
+<div id="donorEditModal" class="modal">
+  <div class="modal-content modal-lg">
+    <span class="close-btn" onclick="closeDonorEditModal()">&times;</span>
+    <h2>Edit Donor</h2>
+    <form id="donorEditForm">
+      <input type="hidden" id="editDonorId">
+      <div class="form-row">
+        <div class="form-group"><label>Name</label><input type="text" id="editDonorName" required></div>
+        <div class="form-group"><label>Blood Group</label><select id="editDonorBloodGroup">[options]</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Age</label><input type="number" id="editDonorAge"></div>
+        <div class="form-group"><label>Gender</label><select id="editDonorGender"><option>Male</option><option>Female</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone</label><input type="tel" id="editDonorPhone"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="editDonorEmail"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Area</label><input type="text" id="editDonorArea"></div>
+        <div class="form-group"><label>District</label><input type="text" id="editDonorDistrict"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Last Donation</label><input type="date" id="editDonorLastDonation"></div>
+        <div class="form-group"><label>Eligible</label><select id="editDonorEligible"><option value="true">Yes</option><option value="false">No</option></select></div>
+      </div>
+      <button type="submit" class="btn-primary">Update Donor</button>
+    </form>
+  </div>
+</div>
+
+<!-- Request Edit Modal -->
+<div id="requestEditModal" class="modal">
+  <div class="modal-content modal-lg">
+    <span class="close-btn" onclick="closeRequestEditModal()">&times;</span>
+    <h2>Edit Blood Request</h2>
+    <form id="requestEditForm">
+      <input type="hidden" id="editRequestId">
+      <input type="hidden" id="editRequestType">
+      <div class="form-row">
+        <div class="form-group"><label>Patient Name</label><input type="text" id="editRequestPatient" required></div>
+        <div class="form-group"><label>Blood Group</label><select id="editRequestBloodGroup">[options]</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Bags</label><input type="number" id="editRequestBags" min="1" required></div>
+        <div class="form-group"><label>Hospital/Location</label><input type="text" id="editRequestHospital" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone</label><input type="tel" id="editRequestPhone" required></div>
+        <div class="form-group"><label>Status</label><select id="editRequestStatus"><option>pending</option><option>approved</option><option>rejected</option><option>fulfilled</option></select></div>
+      </div>
+      <div id="returnGroupField" style="display:none;">
+        <div class="form-group"><label>Return Blood Group (Bank only)</label><select id="editRequestReturnGroup">[options]</select></div>
+      </div>
+      <button type="submit" class="btn-primary">Save Changes</button>
+    </form>
+  </div>
+</div>
 
     <!-- FOOTER -->
     <footer class="footer">
