@@ -306,6 +306,10 @@ form.addEventListener('submit', async (e) => {
         showMsg('✅ Registration successful! Thank you for registering as a blood donor.', true);
         form.reset();
         clearErrors('name', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
+
+        setTimeout(() => {
+        window.location.href = "search-donor.html";
+    }, 2000);
     } catch (err) {
         console.error('Firestore error:', err);
         showMsg('❌ Registration failed. Please check your connection and try again.', false);
