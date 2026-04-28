@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="styles/donate-blood.css">
     <link rel="stylesheet" href="styles/navbar.css">
     <link rel="stylesheet" href="styles/footer.css">
+    <style>
+        .error-text { color: red; font-size: 0.8rem; margin-top: 4px; display: block; }
+        .input-error { border-color: red !important; }
+    </style>
 </head>
 <body>
 
@@ -35,15 +39,16 @@
     <form id="donorForm">
         <fieldset>
             <legend>Personal Information</legend>
-            <div class="row"><div class="col"><label>Full Name *</label><input type="text" id="name" required></div></div>
+            <div class="row"><div class="col"><label>Full Name *</label><input type="text" id="name" required><span id="name-error" class="error-text"></span></div></div>
             <div class="row">
-                <div class="col"><label>National ID (NID) No.</label><input type="text" id="nid"></div>
-                <div class="col"><label>Passport No. (If Foreign National)</label><input type="text" id="passport"></div>
+                <div class="col"><label>National ID (NID) No.</label><input type="text" id="nid"><span id="nid-error" class="error-text"></span></div>
+                <div class="col"><label>Passport No. (If Foreign National)</label><input type="text" id="passport"><span id="passport-error" class="error-text"></span></div>
             </div>
             <div class="row">
-                <div class="col"><label>Date of Birth *</label><input type="date" id="dob" required></div>
+                <div class="col"><label>Date of Birth *</label><input type="date" id="dob" required><span id="dob-error" class="error-text"></span></div>
                 <div class="col"><label>Gender *</label>
                     <select id="gender" required><option value="">Select</option><option>Male</option><option>Female</option></select>
+                    <span id="gender-error" class="error-text"></span>
                 </div>
             </div>
             <div class="row">
@@ -53,16 +58,17 @@
                         <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
                         <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
                     </select>
+                    <span id="bloodGroup-error" class="error-text"></span>
                 </div>
-                <div class="col"><label>Last Blood Donation Date</label><input type="date" id="lastDonation"></div>
+                <div class="col"><label>Last Blood Donation Date</label><input type="date" id="lastDonation"><span id="lastDonation-error" class="error-text"></span></div>
             </div>
             <div class="row">
-                <div class="col"><label>Mobile Number *</label><input type="tel" id="phone" placeholder="01XXXXXXXXX" required></div>
-                <div class="col"><label>Email Address</label><input type="email" id="email"></div>
+                <div class="col"><label>Mobile Number *</label><input type="tel" id="phone" placeholder="01XXXXXXXXX" required><span id="phone-error" class="error-text"></span></div>
+                <div class="col"><label>Email Address</label><input type="email" id="email"><span id="email-error" class="error-text"></span></div>
             </div>
             <div class="row">
-                <div class="col"><label>District *</label><input type="text" id="district" placeholder="e.g. Dhaka" required></div>
-                <div class="col"><label>Area / Thana *</label><input type="text" id="area" placeholder="e.g. Mirpur, Kotwali" required></div>
+                <div class="col"><label>District *</label><input type="text" id="district" placeholder="e.g. Dhaka" required><span id="district-error" class="error-text"></span></div>
+                <div class="col"><label>Area / Thana *</label><input type="text" id="area" placeholder="e.g. Mirpur, Kotwali" required><span id="area-error" class="error-text"></span></div>
             </div>
         </fieldset>
 
@@ -92,6 +98,7 @@
 
         <div class="declaration">
             <label><input type="checkbox" id="declaration" required> I confirm that all information provided is true and accurate. I understand that DonateLife only connects donors and recipients and that actual blood donation will take place at a licensed hospital or blood bank.</label>
+            <span id="declaration-error" class="error-text"></span>
         </div>
 
         <div class="btn-group">
@@ -111,6 +118,7 @@
 <script type="module">
 import { db } from './firebase-init.js';
 import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+import { validateName, validatePhone, validateEmail, validateBloodType, validateDate, showError, clearErrors } from './validators.js';
 
 const form      = document.getElementById('donorForm');
 const submitBtn = document.getElementById('submitBtn');
@@ -133,8 +141,123 @@ function calcAge(dobStr) {
     return age;
 }
 
+function validateForm() {
+    let isValid = true;
+    
+    // Get values
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const bloodGroup = document.getElementById('bloodGroup').value;
+    const dob = document.getElementById('dob').value;
+    const lastDonation = document.getElementById('lastDonation').value;
+    const district = document.getElementById('district').value.trim();
+    const area = document.getElementById('area').value.trim();
+    const gender = document.getElementById('gender').value;
+    const declaration = document.getElementById('declaration').checked;
+    
+    // Clear previous errors
+    clearErrors('name', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
+    
+    // Validate name
+    const nameVal = validateName(name);
+    if (!nameVal.valid) {
+        showError('name', nameVal.msg);
+        isValid = false;
+    }
+    
+    // Validate phone
+    const phoneVal = validatePhone(phone);
+    if (!phoneVal.valid) {
+        showError('phone', phoneVal.msg);
+        isValid = false;
+    }
+    
+    // Validate email (optional)
+    if (email) {
+        const emailVal = validateEmail(email);
+        if (!emailVal.valid) {
+            showError('email', emailVal.msg);
+            isValid = false;
+        }
+    }
+    
+    // Validate blood group
+    const bloodVal = validateBloodType(bloodGroup);
+    if (!bloodVal.valid) {
+        showError('bloodGroup', bloodVal.msg);
+        isValid = false;
+    }
+    
+    // Validate date of birth (not future)
+    if (dob) {
+        const dobVal = validateDate(dob, false);
+        if (!dobVal.valid) {
+            showError('dob', dobVal.msg);
+            isValid = false;
+        } else {
+            const age = calcAge(dob);
+            if (age < 18 || age > 60) {
+                showError('dob', 'Age must be between 18 and 60 years');
+                isValid = false;
+            }
+        }
+    } else {
+        showError('dob', 'Date of birth is required');
+        isValid = false;
+    }
+    
+// Validate last donation date (if provided, must be at least 4 months ago)
+if (lastDonation) {
+    const lastDonVal = validateDate(lastDonation, false, true); // ← ADD true here
+
+    if (!lastDonVal.valid) {
+        showError('lastDonation', lastDonVal.msg);
+        isValid = false;
+    }
+}
+    
+    // Validate district
+    if (!district) {
+        showError('district', 'District is required');
+        isValid = false;
+    } else if (district.length < 2) {
+        showError('district', 'District must be at least 2 characters');
+        isValid = false;
+    }
+    
+    // Validate area
+    if (!area) {
+        showError('area', 'Area is required');
+        isValid = false;
+    } else if (area.length < 2) {
+        showError('area', 'Area must be at least 2 characters');
+        isValid = false;
+    }
+    
+    // Validate gender
+    if (!gender) {
+        showError('gender', 'Gender is required');
+        isValid = false;
+    }
+    
+    // Validate declaration
+    if (!declaration) {
+        showError('declaration', 'You must confirm the declaration');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+        showMsg('Please fix the errors above before submitting.', false);
+        return;
+    }
+    
     const v  = id => document.getElementById(id)?.value?.trim() || '';
     const rv = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; };
 
@@ -182,6 +305,7 @@ form.addEventListener('submit', async (e) => {
         await addDoc(collection(db, 'donors'), donorData);
         showMsg('✅ Registration successful! Thank you for registering as a blood donor.', true);
         form.reset();
+        clearErrors('name', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
     } catch (err) {
         console.error('Firestore error:', err);
         showMsg('❌ Registration failed. Please check your connection and try again.', false);
@@ -190,17 +314,19 @@ form.addEventListener('submit', async (e) => {
         submitBtn.textContent = 'Register as Donor';
     }
 });
+
+// Real-time validation on blur
+document.getElementById('name').addEventListener('blur', () => validateName(document.getElementById('name').value.trim()).valid || showError('name', validateName(document.getElementById('name').value.trim()).msg));
+document.getElementById('phone').addEventListener('blur', () => validatePhone(document.getElementById('phone').value.trim()).valid || showError('phone', validatePhone(document.getElementById('phone').value.trim()).msg));
+document.getElementById('email').addEventListener('blur', () => { const email = document.getElementById('email').value.trim(); if(email && !validateEmail(email).valid) showError('email', validateEmail(email).msg); });
+document.getElementById('bloodGroup').addEventListener('change', () => validateBloodType(document.getElementById('bloodGroup').value).valid || showError('bloodGroup', validateBloodType(document.getElementById('bloodGroup').value).msg));
 </script>
-
-
 
 <script>
 (function () {
-    /* ── Hamburger menu ── */
     const nav = document.querySelector('nav');
     const navList = nav?.querySelector('.nav');
     if (nav && navList) {
-        // Inject hamburger button
         const btn = document.createElement('button');
         btn.className = 'hamburger';
         btn.setAttribute('aria-label', 'Toggle menu');
@@ -212,7 +338,6 @@ form.addEventListener('submit', async (e) => {
             navList.classList.toggle('open');
         });
  
-        // Close on outside click
         document.addEventListener('click', (e) => {
             if (!nav.contains(e.target)) {
                 btn.classList.remove('open');
@@ -220,7 +345,6 @@ form.addEventListener('submit', async (e) => {
             }
         });
  
-        // Close on link click
         navList.querySelectorAll('a').forEach(a =>
             a.addEventListener('click', () => {
                 btn.classList.remove('open');
