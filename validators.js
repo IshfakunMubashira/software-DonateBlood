@@ -117,6 +117,12 @@ export function validateDate(dateStr, allowFuture = false, isDonationDate = fals
     return { valid: false, msg: "Date cannot be in the future" };
   }
 
+  // NEW: when future dates are allowed, past dates are invalid
+  if (allowFuture && inputDate < today) {
+    return { valid: false, msg: "Date cannot be in the past" };
+  }
+
+
   // ❌ 4-month donation gap rule
   if (isDonationDate) {
     const minAllowed = new Date(today);

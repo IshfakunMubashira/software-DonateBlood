@@ -320,6 +320,31 @@ document.getElementById('name').addEventListener('blur', () => validateName(docu
 document.getElementById('phone').addEventListener('blur', () => validatePhone(document.getElementById('phone').value.trim()).valid || showError('phone', validatePhone(document.getElementById('phone').value.trim()).msg));
 document.getElementById('email').addEventListener('blur', () => { const email = document.getElementById('email').value.trim(); if(email && !validateEmail(email).valid) showError('email', validateEmail(email).msg); });
 document.getElementById('bloodGroup').addEventListener('change', () => validateBloodType(document.getElementById('bloodGroup').value).valid || showError('bloodGroup', validateBloodType(document.getElementById('bloodGroup').value).msg));
+
+// Real-time validation for date of birth
+document.getElementById('dob').addEventListener('blur', () => {
+  const val = document.getElementById('dob').value;
+  if (val) {
+    const result = validateDate(val, false, false);
+    if (!result.valid) showError('dob', result.msg);
+    else showError('dob', '');
+  } else {
+    showError('dob', '');
+  }
+});
+
+// Real-time validation for last donation date
+document.getElementById('lastDonation').addEventListener('blur', () => {
+  const val = document.getElementById('lastDonation').value;
+  if (val) {
+    const result = validateDate(val, false, true);
+    if (!result.valid) showError('lastDonation', result.msg);
+    else showError('lastDonation', '');
+  } else {
+    showError('lastDonation', '');
+  }
+});
+
 </script>
 
 <script>

@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="styles/navbar.css">
     <link rel="stylesheet" href="styles/footer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .error-text { color: red; font-size: 0.8rem; margin-top: 4px; display: block; }
+        .input-error { border-color: red !important; }
+    </style>
 </head>
 <body>
 
@@ -28,7 +32,7 @@
         <h2><i class="fa-solid fa-droplet"></i> Post Blood Request</h2>
         <div id="reqMsg" style="display:none;padding:12px 16px;border-radius:5px;margin-bottom:14px;font-weight:600;"></div>
         <form id="bloodForm">
-            <div class="box"><label>Patient Name</label><input type="text" id="patientName" placeholder="Enter patient's name" required></div>
+            <div class="box"><label>Patient Name</label><input type="text" id="patientName" placeholder="Enter patient's name" required><span id="patientName-error" class="error-text"></span></div>
             <div class="box"><label>Blood Group</label>
                 <select id="bloodGroup" required>
                     <option value="">-- Choose Group --</option>
@@ -37,10 +41,11 @@
                     <option value="O+">O+</option><option value="O-">O-</option>
                     <option value="AB+">AB+</option><option value="AB-">AB-</option>
                 </select>
+                <span id="bloodGroup-error" class="error-text"></span>
             </div>
-            <div class="box"><label>How Many Bags Needed</label><input type="number" id="bags" placeholder="Enter number of bags" min="1" required></div>
-            <div class="box"><label>Location / Hospital</label><input type="text" id="hospital" placeholder="Hospital Name & City" required></div>
-            <div class="box"><label>Mobile Number</label><input type="tel" id="phone" placeholder="01XXXXXXXXX" required></div>
+            <div class="box"><label>How Many Bags Needed</label><input type="number" id="bags" placeholder="Enter number of bags" min="1" required><span id="bags-error" class="error-text"></span></div>
+            <div class="box"><label>Location / Hospital</label><input type="text" id="hospital" placeholder="Hospital Name & City" required><span id="hospital-error" class="error-text"></span></div>
+            <div class="box"><label>Mobile Number</label><input type="tel" id="phone" placeholder="01XXXXXXXXX" required><span id="phone-error" class="error-text"></span></div>
             <button type="submit" class="req-btn" id="reqBtn">SUBMIT REQUEST</button>
         </form>
     </section>
@@ -64,6 +69,7 @@ import {
     collection, addDoc, query, orderBy,
     onSnapshot, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+import { validateName, validatePhone, validateBags, validateBloodType, showError, clearErrors } from './validators.js';
 
 const form        = document.getElementById('bloodForm');
 const postsDiv    = document.getElementById('postsDisplay');
@@ -79,9 +85,66 @@ function showMsg(text, ok) {
     setTimeout(() => { msgBox.style.display = 'none'; }, 4000);
 }
 
+function validateForm() {
+    let isValid = true;
+    
+    const patientName = document.getElementById('patientName').value.trim();
+    const bloodGroup = document.getElementById('bloodGroup').value;
+    const bags = document.getElementById('bags').value;
+    const hospital = document.getElementById('hospital').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    
+    clearErrors('patientName', 'bloodGroup', 'bags', 'hospital', 'phone');
+    
+    // Validate patient name
+    const nameVal = validateName(patientName);
+    if (!nameVal.valid) {
+        showError('patientName', nameVal.msg);
+        isValid = false;
+    }
+    
+    // Validate blood group
+    const bloodVal = validateBloodType(bloodGroup);
+    if (!bloodVal.valid) {
+        showError('bloodGroup', bloodVal.msg);
+        isValid = false;
+    }
+    
+    // Validate bags
+    const bagsVal = validateBags(bags);
+    if (!bagsVal.valid) {
+        showError('bags', bagsVal.msg);
+        isValid = false;
+    }
+    
+    // Validate hospital (basic)
+    if (!hospital) {
+        showError('hospital', 'Hospital name is required');
+        isValid = false;
+    } else if (hospital.length < 3) {
+        showError('hospital', 'Please enter a valid hospital name');
+        isValid = false;
+    }
+    
+    // Validate phone
+    const phoneVal = validatePhone(phone);
+    if (!phoneVal.valid) {
+        showError('phone', phoneVal.msg);
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
 // Submit new request
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+        showMsg('Please fix the errors above before submitting.', false);
+        return;
+    }
+    
     const v = id => document.getElementById(id).value.trim();
     try {
         reqBtn.disabled = true;
@@ -97,6 +160,7 @@ form.addEventListener('submit', async (e) => {
         });
         showMsg('✅ Request posted successfully!', true);
         form.reset();
+        clearErrors('patientName', 'bloodGroup', 'bags', 'hospital', 'phone');
     } catch (err) {
         console.error('Error posting request:', err);
         showMsg('❌ Failed to post request. Please try again.', false);
@@ -105,6 +169,12 @@ form.addEventListener('submit', async (e) => {
         reqBtn.textContent = 'SUBMIT REQUEST';
     }
 });
+
+// Real-time validation on blur
+document.getElementById('patientName').addEventListener('blur', () => { const r = validateName(document.getElementById('patientName').value.trim()); if(!r.valid) showError('patientName', r.msg); else showError('patientName', ''); });
+document.getElementById('bloodGroup').addEventListener('change', () => { const r = validateBloodType(document.getElementById('bloodGroup').value); if(!r.valid) showError('bloodGroup', r.msg); else showError('bloodGroup', ''); });
+document.getElementById('bags').addEventListener('blur', () => { const r = validateBags(document.getElementById('bags').value); if(!r.valid) showError('bags', r.msg); else showError('bags', ''); });
+document.getElementById('phone').addEventListener('blur', () => { const r = validatePhone(document.getElementById('phone').value.trim()); if(!r.valid) showError('phone', r.msg); else showError('phone', ''); });
 
 // Real-time listener — shows all pending requests newest first
 const q = query(collection(db, 'public_requests'), orderBy('createdAt', 'desc'));
@@ -138,15 +208,11 @@ onSnapshot(q, (snapshot) => {
 });
 </script>
 
-
-
 <script>
 (function () {
-    /* ── Hamburger menu ── */
     const nav = document.querySelector('nav');
     const navList = nav?.querySelector('.nav');
     if (nav && navList) {
-        // Inject hamburger button
         const btn = document.createElement('button');
         btn.className = 'hamburger';
         btn.setAttribute('aria-label', 'Toggle menu');
@@ -158,7 +224,6 @@ onSnapshot(q, (snapshot) => {
             navList.classList.toggle('open');
         });
  
-        // Close on outside click
         document.addEventListener('click', (e) => {
             if (!nav.contains(e.target)) {
                 btn.classList.remove('open');
@@ -166,7 +231,6 @@ onSnapshot(q, (snapshot) => {
             }
         });
  
-        // Close on link click
         navList.querySelectorAll('a').forEach(a =>
             a.addEventListener('click', () => {
                 btn.classList.remove('open');

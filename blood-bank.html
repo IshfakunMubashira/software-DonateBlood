@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="styles/navbar.css">
     <link rel="stylesheet" href="styles/footer.css">
     <link rel="stylesheet" href="styles/blood-bank.css">
+    <style>
+        .error-text { color: red; font-size: 0.8rem; margin-top: 4px; display: block; }
+        .input-error { border-color: red !important; }
+    </style>
 </head>
 <body>
 
@@ -60,27 +64,28 @@
         <h2>Blood Bag Request Form</h2>
         <form class="request-form" id="bankRequestForm">
             <div id="bankReqMsg" style="display:none;padding:12px;border-radius:5px;margin-bottom:14px;font-weight:600;"></div>
-            <div class="form-group"><label>Patient / Recipient Name</label><input type="text" id="reqPatient" required></div>
-            <div class="form-group"><label>Contact Number</label><input type="tel" id="reqPhone" required></div>
-            <div class="form-group"><label>Hospital Address</label><textarea rows="2" id="reqHospital" required></textarea></div>
-            <div class="form-group"><label>When Blood is Needed</label><input type="datetime-local" id="reqNeededBy" required></div>
-            <div class="form-group"><label>Amount of Blood Needed (bags)</label><input type="number" id="reqBags" min="1" required></div>
-            <div class="form-group"><label>Blood Group Requested</label><input type="text" id="requestedBlood" readonly></div>
+            <div class="form-group"><label>Patient / Recipient Name</label><input type="text" id="reqPatient" required><span id="reqPatient-error" class="error-text"></span></div>
+            <div class="form-group"><label>Contact Number</label><input type="tel" id="reqPhone" required><span id="reqPhone-error" class="error-text"></span></div>
+            <div class="form-group"><label>Hospital Address</label><textarea rows="2" id="reqHospital" required></textarea><span id="reqHospital-error" class="error-text"></span></div>
+            <div class="form-group"><label>When Blood is Needed</label><input type="datetime-local" id="reqNeededBy" required><span id="reqNeededBy-error" class="error-text"></span></div>
+            <div class="form-group"><label>Amount of Blood Needed (bags)</label><input type="number" id="reqBags" min="1" required><span id="reqBags-error" class="error-text"></span></div>
+            <div class="form-group"><label>Blood Group Requested</label><input type="text" id="requestedBlood" readonly><span id="requestedBlood-error" class="error-text"></span></div>
             <div class="form-group"><label>Blood Group You Will Donate in Return</label>
                 <select id="reqReturnGroup" required>
                     <option value="">Select</option>
                     <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
                     <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
                 </select>
+                <span id="reqReturnGroup-error" class="error-text"></span>
             </div>
-            <div class="form-group"><label>Doctor's Name</label><input type="text" id="reqDoctor" required></div>
-            <div class="form-group"><label>Doctor's Contact Number</label><input type="tel" id="reqDoctorPhone" required></div>
+            <div class="form-group"><label>Doctor's Name</label><input type="text" id="reqDoctor" required><span id="reqDoctor-error" class="error-text"></span></div>
+            <div class="form-group"><label>Doctor's Contact Number</label><input type="tel" id="reqDoctorPhone" required><span id="reqDoctorPhone-error" class="error-text"></span></div>
             <button type="submit" class="submit-btn" id="bankReqBtn">Submit Request</button>
         </form>
     </div>
 </div>
 
-<!-- Blood Compatibility Chart (unchanged) -->
+<!-- Blood Compatibility Chart -->
 <section id="bb-chart" class="bb-chart">
     <div class="bb-chart__container">
         <h2 class="bb-chart__title">Blood Type Compatibility</h2>
@@ -131,9 +136,10 @@
 <script type="module">
 import { db } from './firebase-init.js';
 import {
-    collection, doc, getDocs, addDoc, onSnapshot,
+    collection, doc, addDoc, onSnapshot,
     serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+import { validateName, validatePhone, validateBags, validateBloodType, validateDate, showError, clearErrors } from './validators.js';
 
 const BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
 const grid         = document.getElementById('bloodCardGrid');
@@ -142,16 +148,15 @@ const modal        = document.getElementById('requestModal');
 const bloodInput   = document.getElementById('requestedBlood');
 const bloodFilter  = document.getElementById('bloodFilter');
 
-// ── Load inventory with real-time updates ──────────────────────────────────
+let latestInv = {};
+BLOOD_GROUPS.forEach(g => latestInv[g] = 0);
+
+// Load inventory with real-time updates
 onSnapshot(collection(db, 'inventory'), (snapshot) => {
     invLoading.style.display = 'none';
-
-    // Build a map: bloodGroup → bags
-    const inv = {};
-    BLOOD_GROUPS.forEach(g => inv[g] = 0);  // default 0
-    snapshot.forEach(d => { inv[d.id] = d.data().bags || 0; });
-
-    renderCards(inv);
+    BLOOD_GROUPS.forEach(g => latestInv[g] = 0);
+    snapshot.forEach(d => { latestInv[d.id] = d.data().bags || 0; });
+    renderCards(latestInv);
 });
 
 function renderCards(inv) {
@@ -171,38 +176,22 @@ function renderCards(inv) {
             </div>`;
     });
 
-    // Attach click handlers
     document.querySelectorAll('.request-btn:not([disabled])').forEach(btn => {
         btn.addEventListener('click', () => {
             bloodInput.value = btn.getAttribute('data-blood');
             modal.style.display = 'block';
+            clearErrors('reqPatient', 'reqPhone', 'reqHospital', 'reqNeededBy', 'reqBags', 'requestedBlood', 'reqReturnGroup', 'reqDoctor', 'reqDoctorPhone');
         });
     });
 }
 
-// Re-render when filter changes (inventory already loaded)
-bloodFilter.addEventListener('change', () => {
-    // Re-trigger by re-reading the existing cards DOM isn't reliable —
-    // instead just re-fetch (snapshot already has latest data via closure trick)
-    // We'll store latest inv in module scope
-    renderCards(latestInv);
-});
+bloodFilter.addEventListener('change', () => renderCards(latestInv));
 
-let latestInv = {};
-BLOOD_GROUPS.forEach(g => latestInv[g] = 0);
-
-onSnapshot(collection(db, 'inventory'), (snapshot) => {
-    invLoading.style.display = 'none';
-    BLOOD_GROUPS.forEach(g => latestInv[g] = 0);
-    snapshot.forEach(d => { latestInv[d.id] = d.data().bags || 0; });
-    renderCards(latestInv);
-});
-
-// ── Modal close ────────────────────────────────────────────────────────────
+// Modal close
 document.getElementById('closeModal').onclick = () => { modal.style.display = 'none'; };
 window.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
 
-// ── Bank request form → save to Firestore ─────────────────────────────────
+// Bank request form validation & submission
 const bankForm = document.getElementById('bankRequestForm');
 const bankBtn  = document.getElementById('bankReqBtn');
 const bankMsg  = document.getElementById('bankReqMsg');
@@ -214,8 +203,112 @@ function showBankMsg(text, ok) {
     bankMsg.style.display    = 'block';
 }
 
+function validateBankForm() {
+    let isValid = true;
+    
+    const patient = document.getElementById('reqPatient').value.trim();
+    const phone = document.getElementById('reqPhone').value.trim();
+    const hospital = document.getElementById('reqHospital').value.trim();
+    const neededBy = document.getElementById('reqNeededBy').value;
+    const bags = document.getElementById('reqBags').value;
+    const requestedBlood = document.getElementById('requestedBlood').value.trim();
+    const returnGroup = document.getElementById('reqReturnGroup').value;
+    const doctor = document.getElementById('reqDoctor').value.trim();
+    const doctorPhone = document.getElementById('reqDoctorPhone').value.trim();
+    
+    clearErrors('reqPatient', 'reqPhone', 'reqHospital', 'reqNeededBy', 'reqBags', 'requestedBlood', 'reqReturnGroup', 'reqDoctor', 'reqDoctorPhone');
+    
+    // Validate patient name
+    const patientVal = validateName(patient);
+    if (!patientVal.valid) {
+        showError('reqPatient', patientVal.msg);
+        isValid = false;
+    }
+    
+    // Validate contact phone
+    const phoneVal = validatePhone(phone);
+    if (!phoneVal.valid) {
+        showError('reqPhone', phoneVal.msg);
+        isValid = false;
+    }
+    
+    // Validate hospital address
+    if (!hospital) {
+        showError('reqHospital', 'Hospital address is required');
+        isValid = false;
+    } else if (hospital.length < 5) {
+        showError('reqHospital', 'Please enter a valid hospital address');
+        isValid = false;
+    }
+    
+    // Validate needed by date (cannot be in past)
+    if (!neededBy) {
+        showError('reqNeededBy', 'Date and time are required');
+        isValid = false;
+    } else {
+        const dateVal = validateDate(neededBy, true);
+        if (!dateVal.valid) {
+            showError('reqNeededBy', 'Needed date cannot be in the past');
+            isValid = false;
+        }
+    }
+    
+    // Validate bags
+    const bagsVal = validateBags(bags);
+    if (!bagsVal.valid) {
+        showError('reqBags', bagsVal.msg);
+        isValid = false;
+    }
+    
+    // Validate requested blood (must be selected from button)
+    if (!requestedBlood) {
+        showError('requestedBlood', 'Please select a blood group from the available bags');
+        isValid = false;
+    } else {
+        const bloodVal = validateBloodType(requestedBlood);
+        if (!bloodVal.valid) {
+            showError('requestedBlood', bloodVal.msg);
+            isValid = false;
+        }
+    }
+    
+    // Validate return blood group
+    if (!returnGroup) {
+        showError('reqReturnGroup', 'Please select a blood group you will donate in return');
+        isValid = false;
+    } else {
+        const returnVal = validateBloodType(returnGroup);
+        if (!returnVal.valid) {
+            showError('reqReturnGroup', returnVal.msg);
+            isValid = false;
+        }
+    }
+    
+    // Validate doctor name
+    const doctorVal = validateName(doctor);
+    if (!doctorVal.valid) {
+        showError('reqDoctor', doctorVal.msg);
+        isValid = false;
+    }
+    
+    // Validate doctor phone
+    const doctorPhoneVal = validatePhone(doctorPhone);
+    if (!doctorPhoneVal.valid) {
+        showError('reqDoctorPhone', doctorPhoneVal.msg);
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
 bankForm.addEventListener('submit', async e => {
     e.preventDefault();
+    
+    if (!validateBankForm()) {
+        showBankMsg('Please fix the errors above before submitting.', false);
+        return;
+    }
+    
     const v = id => document.getElementById(id).value.trim();
     try {
         bankBtn.disabled = true;
@@ -236,6 +329,7 @@ bankForm.addEventListener('submit', async e => {
         });
         showBankMsg('✅ Request submitted successfully!', true);
         bankForm.reset();
+        clearErrors('reqPatient', 'reqPhone', 'reqHospital', 'reqNeededBy', 'reqBags', 'requestedBlood', 'reqReturnGroup', 'reqDoctor', 'reqDoctorPhone');
         setTimeout(() => { modal.style.display = 'none'; bankMsg.style.display = 'none'; }, 2000);
     } catch (err) {
         console.error('Error submitting request:', err);
@@ -245,18 +339,33 @@ bankForm.addEventListener('submit', async e => {
         bankBtn.textContent = 'Submit Request';
     }
 });
+
+// Real-time validation on blur
+document.getElementById('reqPatient').addEventListener('blur', () => { const r = validateName(document.getElementById('reqPatient').value.trim()); if(!r.valid) showError('reqPatient', r.msg); else showError('reqPatient', ''); });
+document.getElementById('reqPhone').addEventListener('blur', () => { const r = validatePhone(document.getElementById('reqPhone').value.trim()); if(!r.valid) showError('reqPhone', r.msg); else showError('reqPhone', ''); });
+document.getElementById('reqBags').addEventListener('blur', () => { const r = validateBags(document.getElementById('reqBags').value); if(!r.valid) showError('reqBags', r.msg); else showError('reqBags', ''); });
+document.getElementById('reqReturnGroup').addEventListener('change', () => { const r = validateBloodType(document.getElementById('reqReturnGroup').value); if(!r.valid) showError('reqReturnGroup', r.msg); else showError('reqReturnGroup', ''); });
+document.getElementById('reqDoctor').addEventListener('blur', () => { const r = validateName(document.getElementById('reqDoctor').value.trim()); if(!r.valid) showError('reqDoctor', r.msg); else showError('reqDoctor', ''); });
+document.getElementById('reqDoctorPhone').addEventListener('blur', () => { const r = validatePhone(document.getElementById('reqDoctorPhone').value.trim()); if(!r.valid) showError('reqDoctorPhone', r.msg); else showError('reqDoctorPhone', ''); });
+
+document.getElementById('reqNeededBy').addEventListener('blur', () => {
+  const val = document.getElementById('reqNeededBy').value;
+  if (val) {
+    const result = validateDate(val, true, false);
+    if (!result.valid) showError('reqNeededBy', result.msg);
+    else showError('reqNeededBy', '');
+  } else {
+    showError('reqNeededBy', '');
+  }
+});
+
 </script>
-
-
-
 
 <script>
 (function () {
-    /* ── Hamburger menu ── */
     const nav = document.querySelector('nav');
     const navList = nav?.querySelector('.nav');
     if (nav && navList) {
-        // Inject hamburger button
         const btn = document.createElement('button');
         btn.className = 'hamburger';
         btn.setAttribute('aria-label', 'Toggle menu');
@@ -268,7 +377,6 @@ bankForm.addEventListener('submit', async e => {
             navList.classList.toggle('open');
         });
  
-        // Close on outside click
         document.addEventListener('click', (e) => {
             if (!nav.contains(e.target)) {
                 btn.classList.remove('open');
@@ -276,7 +384,6 @@ bankForm.addEventListener('submit', async e => {
             }
         });
  
-        // Close on link click
         navList.querySelectorAll('a').forEach(a =>
             a.addEventListener('click', () => {
                 btn.classList.remove('open');
