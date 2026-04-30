@@ -226,7 +226,7 @@
                 <div class="content-header">
                     <h1><i class="fa-solid fa-users"></i> Donor Management</h1>
                     <div class="header-actions">
-                        <button class="btn-refresh" onclick="refreshDonors()">Refresh</button>
+                        <button class="btn-refresh" onclick="refreshDonors()"><i class="fa-solid fa-rotate"></i>  Refresh</button>
                         <button class="btn-export" onclick="exportDonors()">
                             <i class="fa-solid fa-download"></i> Export
                         </button>
@@ -277,7 +277,12 @@
                 <div class="content-header">
                     <h1><i class="fa-solid fa-hand-holding-heart"></i> Blood Requests</h1>
                     <div class="header-actions">
-                        <button class="btn-refresh" onclick="refreshRequests()">Refresh</button>
+                        <button class="btn-refresh" onclick="refreshRequests()">
+                            <i class="fa-solid fa-rotate"></i>  Refresh
+                        </button>
+                        <button class="btn-warning" onclick="expireOldRequests()" style="background: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+                            <i class="fa-regular fa-clock"></i> Expire Old Requests
+                        </button>
                     </div>
                 </div>
 
@@ -450,28 +455,6 @@
                             <button type="submit" class="btn-primary">Update Links</button>
                         </form>
                     </div>
-
-                    <!-- Guidelines -->
-                    <div class="settings-card">
-                        <h3>Donation Guidelines</h3>
-                        <form id="guidelinesForm">
-                            <div class="form-group">
-                                <label>Donor Guidelines</label>
-                                <textarea id="donorGuidelines" rows="4">• Age 18–60 years
-• Weight at least 45 kg
-• Healthy and free from infectious diseases
-• Minimum 3–4 months gap between donations</textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Recipient Guidelines</label>
-                                <textarea id="recipientGuidelines" rows="4">• Verify blood group at hospital
-• Respect donor privacy
-• No harassment of donors
-• Genuine requests only</textarea>
-                            </div>
-                            <button type="submit" class="btn-primary">Update Guidelines</button>
-                        </form>
-                    </div>
                 </div>
             </div>
         </main>
@@ -510,56 +493,62 @@
         </div>
     </div>
 
-    <!-- Event Modal -->
-    <div id="eventModal" class="modal">
-        <div class="modal-content modal-lg">
-            <span class="close-btn" onclick="closeEventModal()">&times;</span>
-            <h2><i class="fa-solid fa-calendar-plus"></i> Add/Edit Event</h2>
-            <form id="eventForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Event Title</label>
-                        <input type="text" id="eventTitle" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" id="eventDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Time</label>
-                        <input type="text" id="eventTime" placeholder="10:00 AM – 4:00 PM" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Location</label>
-                        <input type="text" id="eventLocation" required>
-                    </div>
-                </div>
-
+    <!-- Event Modal (updated to support external URLs) -->
+<div id="eventModal" class="modal">
+    <div class="modal-content modal-lg">
+        <span class="close-btn" onclick="closeEventModal()">&times;</span>
+        <h2><i class="fa-solid fa-calendar-plus"></i> Add/Edit Event</h2>
+        <form id="eventForm">
+            <div class="form-row">
                 <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="eventDescription" rows="4" required></textarea>
+                    <label>Event Title</label>
+                    <input type="text" id="eventTitle" required>
                 </div>
-
+            </div>
+            
+            <div class="form-row">
                 <div class="form-group">
-                    <label>Event Images</label>
-                    <input type="file" id="eventImages" multiple accept="image/*">
-                    <small>You can select multiple images (JPEG, PNG)</small>
+                    <label>Date</label>
+                    <input type="date" id="eventDate" required>
                 </div>
-
-                <div id="existingImages" class="existing-images"></div>
-
                 <div class="form-group">
-                    <button type="submit" class="btn-primary">Save Event</button>
+                    <label>Time</label>
+                    <input type="text" id="eventTime" placeholder="10:00 AM – 4:00 PM" required>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="eventLocation" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="eventDescription" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Upload Images (JPEG, PNG)</label>
+                <input type="file" id="eventImages" multiple accept="image/*">
+                <small>Select files from your computer.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Or paste external image URLs (one per line)</label>
+                <textarea id="eventImageUrls" rows="3" placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.png"></textarea>
+                <small>URLs will be combined with uploaded files.</small>
+            </div>
+
+            <div id="existingImages" class="existing-images"></div>
+
+            <div class="form-group">
+                <button type="submit" class="btn-primary">Save Event</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- Admin Modal -->
     <div id="adminModal" class="modal">
@@ -654,7 +643,6 @@
   </div>
 </div>
 
-    <!-- FOOTER -->
 <!-- FOOTER -->
 <footer class="footer">
     <div class="footer-box">
@@ -669,28 +657,28 @@
         <a href="blood-bank.html">Blood Bank</a>
         <a href="request.html">Blood Request</a>
         <a href="donate-blood.html">Donate Blood</a>
-        <a href="admin.html">Admin-site</a>
+        <a href="admin.html">Admin-Site</a>
     </div>
 
-    <div class="footer-box">
+<div class="footer-box">
     <h3>Contact & Socials</h3>
-
-        <p>Phone: <a href="tel:+8801822162664">01822162664</a></p>
-    
-        <p>Email: <a href="mailto:donatelife2026@gmail.com">donatelife2026@gmail.com</a></p>
-    
-        <div class="socials">
-            <a href="https://facebook.com" target="_blank"><i class="fa-brands fa-facebook"></i></a>
-            <a href="https://instagram.com" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-            <a href="https://twitter.com" target="_blank"><i class="fa-brands fa-twitter"></i></a>
-        </div>
+    <p>Phone: <a id="footer-phone-link" href="tel:"></a></p>
+    <p>Email: <a id="footer-email-link" href="mailto:"></a></p>
+    <p>Address: <span id="footer-address"></span></p>
+    <div class="socials">
+        <a id="facebook-link" href="#" target="_blank"><i class="fa-brands fa-facebook"></i></a>
+        <a id="instagram-link" href="#" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+        <a id="twitter-link" href="#" target="_blank"><i class="fa-brands fa-twitter"></i></a>
     </div>
+</div>
 
     <!-- Copyright -->
     <div class="footer-bottom">
         <p>© 2026 DonateLife. All Rights Reserved.</p>
     </div>
 </footer>
+<script type="module" src="firebase-init.js"></script>
+<script type="module" src="scripts/footer-settings.js"></script>
 
     <!-- Main Admin JavaScript -->
     <script type="module" src="scripts/admin.js"></script>

@@ -173,8 +173,13 @@
     </form>
 </div>
 
+<!-- FOOTER -->
 <footer class="footer">
-    <div class="footer-box"><img src="images/footer-logo.png" alt=""><h1>Donate Blood, Save Life</h1></div>
+    <div class="footer-box">
+        <img src="images/footer-logo.png" alt="">
+        <h1>Donate Blood, Save Life</h1>
+    </div>
+
     <div class="footer-box">
         <h3>Important Links</h3>
         <a href="index.html">Home</a>
@@ -183,18 +188,26 @@
         <a href="request.html">Blood Request</a>
         <a href="donate-blood.html">Donate Blood</a>
     </div>
-    <div class="footer-box">
-        <h3>Contact & Socials</h3>
-        <p>Phone: <a href="tel:+8801822162664">01822162664</a></p>
-        <p>Email: <a href="mailto:donatelife2026@gmail.com">donatelife2026@gmail.com</a></p>
-        <div class="socials">
-            <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
-            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
-            <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
-        </div>
+
+<div class="footer-box">
+    <h3>Contact & Socials</h3>
+    <p>Phone: <a id="footer-phone-link" href="tel:"></a></p>
+    <p>Email: <a id="footer-email-link" href="mailto:"></a></p>
+    <p>Address: <span id="footer-address"></span></p>
+    <div class="socials">
+        <a id="facebook-link" href="#" target="_blank"><i class="fa-brands fa-facebook"></i></a>
+        <a id="instagram-link" href="#" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+        <a id="twitter-link" href="#" target="_blank"><i class="fa-brands fa-twitter"></i></a>
     </div>
-    <div class="footer-bottom"><p>© 2026 DonateLife. All Rights Reserved.</p></div>
+</div>
+
+    <!-- Copyright -->
+    <div class="footer-bottom">
+        <p>© 2026 DonateLife. All Rights Reserved.</p>
+    </div>
 </footer>
+<script type="module" src="firebase-init.js"></script>
+<script type="module" src="scripts/footer-settings.js"></script>
 
 <script type="module">
     import { db } from './firebase-init.js';

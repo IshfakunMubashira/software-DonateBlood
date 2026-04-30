@@ -1,4 +1,4 @@
-// admin.js - Complete, stable Admin Panel for DonateLife
+// admin.js - Complete Admin Panel with external image URLs for events
 import { db, auth, storage, serverTimestamp, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, query, orderBy, onSnapshot, ref, uploadBytes, getDownloadURL, deleteObject } from '../firebase-init.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
@@ -56,6 +56,22 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
+}
+
+async function reduceInventory(bloodGroup, bags) {
+  const invRef = doc(db, 'inventory', bloodGroup);
+  const invSnap = await getDoc(invRef);
+  if (!invSnap.exists()) {
+    throw new Error(`No inventory record for ${bloodGroup}`);
+  }
+  const currentBags = invSnap.data().bags || 0;
+  if (currentBags < bags) {
+    throw new Error(`Insufficient inventory: only ${currentBags} bags available`);
+  }
+  await updateDoc(invRef, {
+    bags: currentBags - bags,
+    lastUpdated: serverTimestamp()
+  });
 }
 
 // ------------------- Authentication -------------------
@@ -118,7 +134,7 @@ async function checkAdminStatus(email) {
   }
 }
 
-// ------------------- Load All Data Once (client‑side filtering) -------------------
+// ------------------- Load All Data Once (client-side filtering) -------------------
 async function loadAllData() {
   try {
     const donorsSnap = await getDocs(collection(db, 'donors'));
@@ -296,7 +312,6 @@ function applyDonorFilters() {
 }
 
 async function refreshDonors() {
-  // Reset filters
   const searchInput = document.getElementById('donorSearch');
   const bloodFilter = document.getElementById('donorBloodFilter');
   const eligibleFilter = document.getElementById('donorEligibleFilter');
@@ -403,6 +418,20 @@ function applyRequestFilters() {
   combined.forEach(req => {
     const neededBy = req.neededBy ? formatDate(req.neededBy) : (req.neededByDate ? formatDate(req.neededByDate) : 'Urgent');
     const returnInfo = req.type === 'bank' ? `<br><small>Return: ${req.returnGroup}</small>` : '';
+    let actions = '';
+    if (req.type === 'bank') {
+      actions = `
+        <button class="action-btn approve" onclick="approveRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-check"></i></button>
+        <button class="action-btn reject" onclick="rejectRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-times"></i></button>
+        <button class="action-btn edit" onclick="editRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-edit"></i></button>
+        <button class="action-btn delete" onclick="deleteRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-trash"></i></button>
+      `;
+    } else {
+      actions = `
+        <button class="action-btn edit" onclick="editRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-edit"></i></button>
+        <button class="action-btn delete" onclick="deleteRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-trash"></i></button>
+      `;
+    }
     html += `<tr>
       <td><span class="status-badge">${req.type === 'public' ? 'Public' : 'Bank'}${returnInfo}</span></td>
       <td>${req.patientName}</td>
@@ -412,19 +441,13 @@ function applyRequestFilters() {
       <td>${req.phone}</td>
       <td>${neededBy}</td>
       <td><span class="status-badge ${req.status}">${req.status}</span></td>
-      <td>
-        <button class="action-btn approve" onclick="approveRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-check"></i></button>
-        <button class="action-btn reject" onclick="rejectRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-times"></i></button>
-        <button class="action-btn edit" onclick="editRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-edit"></i></button>
-        <button class="action-btn delete" onclick="deleteRequest('${req.id}', '${req.type}')"><i class="fa-solid fa-trash"></i></button>
-      </td>
+      <td>${actions}</td>
     </tr>`;
   });
   tbody.innerHTML = html;
 }
 
 async function refreshRequests() {
-  // Reset filters
   const typeFilter = document.getElementById('requestTypeFilter');
   const statusFilter = document.getElementById('requestStatusFilter');
   const bloodFilter = document.getElementById('requestBloodFilter');
@@ -452,10 +475,19 @@ async function refreshRequests() {
 window.approveRequest = async function(id, type) {
   const collectionName = type === 'public' ? 'public_requests' : 'bank_requests';
   try {
+    if (type === 'bank') {
+      const reqSnap = await getDoc(doc(db, collectionName, id));
+      if (!reqSnap.exists()) throw new Error('Request not found');
+      const req = reqSnap.data();
+      await reduceInventory(req.bloodGroup, req.bags);
+    }
     await updateDoc(doc(db, collectionName, id), { status: 'approved', updatedAt: serverTimestamp() });
     await refreshRequests();
     showNotification('Request approved', 'success');
-  } catch (error) { showNotification('Action failed', 'error'); }
+  } catch (error) {
+    console.error(error);
+    showNotification(error.message || 'Action failed', 'error');
+  }
 };
 
 window.rejectRequest = async function(id, type) {
@@ -523,6 +555,33 @@ window.deleteRequest = async function(id, type) {
   }
 };
 
+// ------------------- EXPIRE OLD REQUESTS -------------------
+async function expireOldRequests() {
+  try {
+    const snap = await getDocs(collection(db, 'public_requests'));
+    const now = new Date();
+    let updated = 0;
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      if (data.status === 'expired' || data.status === 'fulfilled') continue;
+      if (data.neededBy) {
+        let neededDate;
+        if (data.neededBy.toDate) neededDate = data.neededBy.toDate();
+        else neededDate = new Date(data.neededBy);
+        if (neededDate < now) {
+          await updateDoc(doc(db, 'public_requests', docSnap.id), { status: 'expired' });
+          updated++;
+        }
+      }
+    }
+    showNotification(`Expired ${updated} request(s)`, 'success');
+    refreshRequests();
+  } catch (error) {
+    console.error(error);
+    showNotification('Failed to expire requests', 'error');
+  }
+}
+
 // ------------------- INVENTORY -------------------
 async function loadInventory() {
   try {
@@ -575,7 +634,7 @@ document.getElementById('inventoryForm')?.addEventListener('submit', async (e) =
   } catch (error) { showNotification('Update failed', 'error'); }
 });
 
-// ------------------- EVENTS -------------------
+// ------------------- EVENTS (with external URL support) -------------------
 async function loadEvents() {
   try {
     const snap = await getDocs(query(collection(db, 'events'), orderBy('date', 'desc')));
@@ -584,7 +643,7 @@ async function loadEvents() {
     let html = '';
     snap.forEach(doc => {
       const ev = doc.data();
-      const firstImage = ev.images?.[0] || 'images/event-placeholder.jpg';
+      const firstImage = (ev.images && ev.images.length > 0) ? ev.images[0] : 'https://via.placeholder.com/400x200?text=No+Image';
       html += `<div class="event-admin-card"><div class="event-images-preview"><img src="${firstImage}"></div><div class="event-admin-info"><h3>${ev.title}</h3><div class="event-meta"><i class="fa-regular fa-calendar"></i> ${ev.date} | ${ev.time}</div><p><i class="fa-solid fa-location-dot"></i> ${ev.location}</p><div class="event-admin-actions"><button class="action-btn edit" onclick="openEventModal('${doc.id}')"><i class="fa-solid fa-edit"></i> Edit</button><button class="action-btn delete" onclick="deleteEvent('${doc.id}')"><i class="fa-solid fa-trash"></i> Delete</button></div></div></div>`;
     });
     grid.innerHTML = html;
@@ -598,6 +657,17 @@ async function refreshEvents() {
 }
 
 window.openEventModal = async function(eventId = null) {
+  // Reset form
+  document.getElementById('eventTitle').value = '';
+  document.getElementById('eventDate').value = '';
+  document.getElementById('eventTime').value = '';
+  document.getElementById('eventLocation').value = '';
+  document.getElementById('eventDescription').value = '';
+  document.getElementById('eventImages').value = '';
+  document.getElementById('eventImageUrls').value = '';
+  document.getElementById('existingImages').innerHTML = '';
+  document.getElementById('eventForm').dataset.eventId = '';
+
   if (eventId) {
     const docSnap = await getDoc(doc(db, 'events', eventId));
     if (docSnap.exists()) {
@@ -608,20 +678,26 @@ window.openEventModal = async function(eventId = null) {
       document.getElementById('eventLocation').value = ev.location || '';
       document.getElementById('eventDescription').value = ev.description || '';
       document.getElementById('eventForm').dataset.eventId = eventId;
+
+      // Show existing images and detect external URLs
       if (ev.images && ev.images.length) {
         let imagesHtml = '<p>Existing images:</p>';
+        let externalUrls = [];
         ev.images.forEach((url, idx) => {
-          imagesHtml += `<div class="existing-image-item"><img src="${url}" width="80"><span class="remove-image" onclick="removeEventImage('${eventId}', ${idx})">✖</span></div>`;
+          // Check if URL is from your Firebase Storage (contains "firebasestorage.googleapis.com")
+          const isFirebaseStorage = url.includes('firebasestorage.googleapis.com');
+          if (isFirebaseStorage) {
+            imagesHtml += `<div class="existing-image-item"><img src="${url}" width="80"><span class="remove-image" onclick="removeEventImage('${eventId}', ${idx})">✖</span></div>`;
+          } else {
+            externalUrls.push(url);
+          }
         });
         document.getElementById('existingImages').innerHTML = imagesHtml;
-      } else {
-        document.getElementById('existingImages').innerHTML = '';
+        if (externalUrls.length) {
+          document.getElementById('eventImageUrls').value = externalUrls.join('\n');
+        }
       }
     }
-  } else {
-    document.getElementById('eventForm').reset();
-    document.getElementById('eventForm').dataset.eventId = '';
-    document.getElementById('existingImages').innerHTML = '';
   }
   document.getElementById('eventModal').style.display = 'block';
 };
@@ -634,7 +710,7 @@ window.removeEventImage = async function(eventId, idx) {
     const toDelete = images[idx];
     images.splice(idx, 1);
     await updateDoc(eventRef, { images });
-    if (toDelete) {
+    if (toDelete && toDelete.includes('firebasestorage.googleapis.com')) {
       const storageRef = ref(storage, toDelete);
       try { await deleteObject(storageRef); } catch(e) { console.warn('Storage delete failed', e); }
     }
@@ -651,18 +727,75 @@ document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
   const location = document.getElementById('eventLocation').value;
   const description = document.getElementById('eventDescription').value;
   const files = document.getElementById('eventImages').files;
-  let imageUrls = [];
+  const urlText = document.getElementById('eventImageUrls').value;
+
+  // Collect external URLs
+  let externalUrls = [];
+  if (urlText.trim()) {
+    externalUrls = urlText.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.startsWith('http'));
+  }
+
+  // Upload new files to Firebase Storage
+  let uploadedUrls = [];
   if (files.length) {
     for (const file of files) {
       const storageRef = ref(storage, `events/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
-      imageUrls.push(url);
+      uploadedUrls.push(url);
     }
   }
+
+  // For existing event, we must preserve existing images that were not removed.
+  // The existing images are shown in #existingImages but only those with remove button (Firebase URLs) can be removed.
+  // External URLs are managed via textarea, so we will replace them completely.
+  // The simplest approach: fetch the existing event's images, filter out the ones that were removed,
+  // then merge with newly uploaded + external URLs.
+  let finalImages = [...externalUrls, ...uploadedUrls];
+  if (eventId) {
+    const existingSnap = await getDoc(doc(db, 'events', eventId));
+    if (existingSnap.exists()) {
+      const oldImages = existingSnap.data().images || [];
+      // Keep only Firebase Storage images that are still present (not removed)
+      // Removed Firebase images have been deleted via removeEventImage, so we can fetch the current list from the doc again?
+      // To keep it simple, we will rely on the fact that when we open the modal, we show existing images with remove buttons.
+      // The remove buttons delete the image from storage AND update the Firestore array immediately (see removeEventImage).
+      // So when we save, the Firestore already reflects the removal. Therefore we should NOT re-add old images.
+      // However, external URLs are managed separately: they will be replaced by current textarea content.
+      // Therefore we only add the new uploads and the external URLs.
+      // No need to add old Firebase images because they are already in Firestore and not being modified.
+      // For external URLs, we are replacing them entirely.
+    }
+  }
+
   const data = { title, date, time, location, description, updatedAt: serverTimestamp() };
-  if (imageUrls.length) data.images = imageUrls;
+  if (finalImages.length) data.images = finalImages;
+
   try {
+    if (eventId) {
+      // For update, we need to merge images? Actually replace images with the new set.
+      // But we must preserve Firebase Storage images that were not removed (they are already in the document).
+      // The user might have added new external URLs and new files, but not touched existing Firebase images.
+      // The current logic: finalImages contains only external URLs + newly uploaded files.
+      // This would erase existing Firebase images. To avoid that, we should:
+      // - Get current images
+      // - Keep those that are from Firebase Storage and not removed (but we don't know which were removed because removeEventImage already deleted from Firestore)
+      // The easiest: when loading modal, we store the original image array. On save, we combine: original Firebase images that still exist + new uploads + external URLs.
+      // But that's complex. Alternative: treat external URLs as additive, and allow removal of any image via separate UI.
+      // Given the scope, I'll simplify: when editing, the textarea shows external URLs that were previously saved. The user can edit them.
+      // Any image that was uploaded (Firebase) remains unless user clicks the X button (which deletes from Firestore and storage).
+      // So after removal, the Firestore array no longer contains that URL. When saving, we must not re-add it.
+      // Therefore we should fetch the current event's images (after any removals) and then add new uploads & external URLs.
+      const currentEventSnap = await getDoc(doc(db, 'events', eventId));
+      let currentImages = currentEventSnap.exists() ? (currentEventSnap.data().images || []) : [];
+      // Remove any existing external URLs (since they will be replaced by textarea)
+      currentImages = currentImages.filter(url => !url.startsWith('http') || url.includes('firebasestorage.googleapis.com'));
+      // Merge with new external URLs and new uploads
+      const merged = [...currentImages, ...uploadedUrls, ...externalUrls];
+      data.images = merged;
+    }
     if (eventId) {
       await updateDoc(doc(db, 'events', eventId), data);
     } else {
@@ -673,7 +806,10 @@ document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
     closeEventModal();
     await refreshEvents();
     showNotification(`Event ${eventId ? 'updated' : 'created'} successfully`, 'success');
-  } catch (error) { showNotification('Operation failed', 'error'); }
+  } catch (error) {
+    console.error(error);
+    showNotification('Operation failed: ' + error.message, 'error');
+  }
 });
 
 window.deleteEvent = async function(id) {
@@ -715,7 +851,6 @@ async function refreshAdmins() {
 }
 
 window.openAdminModal = () => {
-  // Reset form fields when opening modal
   document.getElementById('adminName').value = '';
   document.getElementById('adminEmail').value = '';
   document.getElementById('adminRole').value = 'editor';
@@ -724,39 +859,18 @@ window.openAdminModal = () => {
 
 document.getElementById('adminForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  
-  // Get and validate name
   const name = document.getElementById('adminName').value.trim();
-  if (!name) {
-    showNotification('Admin name is required', 'error');
-    return;
-  }
-  
-  // Get and validate email
+  if (!name) { showNotification('Admin name is required', 'error'); return; }
   let email = document.getElementById('adminEmail').value.trim();
-  if (!email) {
-    showNotification('Email address is required', 'error');
-    return;
-  }
+  if (!email) { showNotification('Email address is required', 'error'); return; }
   email = email.toLowerCase();
-  
-  // Basic email format check
   if (!email.includes('@') || !email.includes('.')) {
     showNotification('Please enter a valid email address', 'error');
     return;
   }
-  
-  // Get role (default to 'editor' if somehow not selected)
-  let role = document.getElementById('adminRole').value;
-  if (!role) role = 'editor';
-  
+  const role = document.getElementById('adminRole').value || 'editor';
   try {
-    await setDoc(doc(db, 'admins', email), { 
-      name: name,           // ensure name is a string, not undefined
-      role: role, 
-      active: true, 
-      createdAt: serverTimestamp() 
-    });
+    await setDoc(doc(db, 'admins', email), { name, role, active: true, createdAt: serverTimestamp() });
     closeAdminModal();
     await refreshAdmins();
     showNotification(`Admin ${name} added successfully`, 'success');
@@ -777,21 +891,22 @@ window.deleteAdmin = async (email) => {
   }
 };
 
-// ------------------- SETTINGS -------------------
+// ------------------- SETTINGS (General & Social only) -------------------
 async function loadSettings() {
   try {
-    const snap = await getDoc(doc(db, 'site_settings', 'general'));
-    if (snap.exists()) {
-      const s = snap.data();
-      document.getElementById('siteName').value = s.siteName || 'DonateLife';
-      document.getElementById('contactEmail').value = s.contactEmail || '';
-      document.getElementById('contactPhone').value = s.contactPhone || '';
-      document.getElementById('address').value = s.address || '';
+    const generalSnap = await getDoc(doc(db, 'settings', 'general'));
+    if (generalSnap.exists()) {
+      const g = generalSnap.data();
+      document.getElementById('contactPhone').value = g.phone || '';
+      document.getElementById('contactEmail').value = g.email || '';
+      document.getElementById('address').value = g.address || '';
+    }
+    const socialSnap = await getDoc(doc(db, 'settings', 'social'));
+    if (socialSnap.exists()) {
+      const s = socialSnap.data();
       document.getElementById('facebookUrl').value = s.facebook || '#';
       document.getElementById('instagramUrl').value = s.instagram || '#';
       document.getElementById('twitterUrl').value = s.twitter || '#';
-      document.getElementById('donorGuidelines').value = s.donorGuidelines || '';
-      document.getElementById('recipientGuidelines').value = s.recipientGuidelines || '';
     }
   } catch (error) { console.error(error); }
 }
@@ -799,10 +914,9 @@ async function loadSettings() {
 document.getElementById('generalSettingsForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   try {
-    await setDoc(doc(db, 'site_settings', 'general'), {
-      siteName: document.getElementById('siteName').value,
-      contactEmail: document.getElementById('contactEmail').value,
-      contactPhone: document.getElementById('contactPhone').value,
+    await setDoc(doc(db, 'settings', 'general'), {
+      phone: document.getElementById('contactPhone').value,
+      email: document.getElementById('contactEmail').value,
       address: document.getElementById('address').value,
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -813,25 +927,13 @@ document.getElementById('generalSettingsForm')?.addEventListener('submit', async
 document.getElementById('socialSettingsForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   try {
-    await setDoc(doc(db, 'site_settings', 'general'), {
+    await setDoc(doc(db, 'settings', 'social'), {
       facebook: document.getElementById('facebookUrl').value,
       instagram: document.getElementById('instagramUrl').value,
       twitter: document.getElementById('twitterUrl').value,
       updatedAt: serverTimestamp()
     }, { merge: true });
     showNotification('Social links updated', 'success');
-  } catch (error) { showNotification('Save failed', 'error'); }
-});
-
-document.getElementById('guidelinesForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  try {
-    await setDoc(doc(db, 'site_settings', 'general'), {
-      donorGuidelines: document.getElementById('donorGuidelines').value,
-      recipientGuidelines: document.getElementById('recipientGuidelines').value,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    showNotification('Guidelines saved', 'success');
   } catch (error) { showNotification('Save failed', 'error'); }
 });
 
@@ -871,12 +973,13 @@ document.getElementById('requestTypeFilter')?.addEventListener('change', applyRe
 document.getElementById('requestStatusFilter')?.addEventListener('change', applyRequestFilters);
 document.getElementById('requestBloodFilter')?.addEventListener('change', applyRequestFilters);
 
-// Make refresh functions global for HTML buttons
+// Make global functions available
 window.refreshDonors = refreshDonors;
 window.refreshRequests = refreshRequests;
 window.refreshInventory = refreshInventory;
 window.refreshEvents = refreshEvents;
 window.refreshAdmins = refreshAdmins;
+window.expireOldRequests = expireOldRequests;
 
 // Close modals on outside click
 window.onclick = function(event) {
@@ -885,7 +988,6 @@ window.onclick = function(event) {
   }
 };
 
-// Make other needed functions global
 window.applyDonorFilters = applyDonorFilters;
 window.applyRequestFilters = applyRequestFilters;
 window.loadInventory = loadInventory;

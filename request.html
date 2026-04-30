@@ -46,6 +46,7 @@
             <div class="box"><label>How Many Bags Needed</label><input type="number" id="bags" placeholder="Enter number of bags" min="1" required><span id="bags-error" class="error-text"></span></div>
             <div class="box"><label>Location / Hospital</label><input type="text" id="hospital" placeholder="Hospital Name & City" required><span id="hospital-error" class="error-text"></span></div>
             <div class="box"><label>Mobile Number</label><input type="tel" id="phone" placeholder="01XXXXXXXXX" required><span id="phone-error" class="error-text"></span></div>
+            <div class="box"><label>When Blood is Needed (Date & Time)</label><input type="datetime-local" id="neededBy" required><span id="neededBy-error" class="error-text"></span></div>
             <button type="submit" class="req-btn" id="reqBtn">SUBMIT REQUEST</button>
         </form>
     </section>
@@ -73,16 +74,14 @@
     </div>
 
     <div class="footer-box">
-    <h3>Contact & Socials</h3>
-
-        <p>Phone: <a href="tel:+8801822162664">01822162664</a></p>
-    
-        <p>Email: <a href="mailto:donatelife2026@gmail.com">donatelife2026@gmail.com</a></p>
-    
+        <h3>Contact & Socials</h3>
+        <p>Phone: <a id="footer-phone-link" href="tel:"></a></p>
+        <p>Email: <a id="footer-email-link" href="mailto:"></a></p>
+        <p>Address: <span id="footer-address"></span></p>
         <div class="socials">
-            <a href="https://facebook.com" target="_blank"><i class="fa-brands fa-facebook"></i></a>
-            <a href="https://instagram.com" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-            <a href="https://twitter.com" target="_blank"><i class="fa-brands fa-twitter"></i></a>
+            <a id="facebook-link" href="#" target="_blank"><i class="fa-brands fa-facebook"></i></a>
+            <a id="instagram-link" href="#" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+            <a id="twitter-link" href="#" target="_blank"><i class="fa-brands fa-twitter"></i></a>
         </div>
     </div>
 
@@ -92,6 +91,9 @@
     </div>
 </footer>
 
+<script type="module" src="firebase-init.js"></script>
+<script type="module" src="scripts/footer-settings.js"></script>
+
 <script type="module">
 import { db } from './firebase-init.js';
 import {
@@ -100,96 +102,105 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
 import { validateName, validatePhone, validateBags, validateBloodType, showError, clearErrors } from './validators.js';
 
-const form        = document.getElementById('bloodForm');
-const postsDiv    = document.getElementById('postsDisplay');
-const reqBtn      = document.getElementById('reqBtn');
-const msgBox      = document.getElementById('reqMsg');
-const loadingMsg  = document.getElementById('loadingMsg');
+// Helper: check if a neededBy date is in the past
+function isExpired(neededByValue) {
+    if (!neededByValue) return false;
+    let neededDate;
+    if (neededByValue.toDate) {
+        neededDate = neededByValue.toDate();
+    } else {
+        neededDate = new Date(neededByValue);
+    }
+    return neededDate < new Date();
+}
+
+const form = document.getElementById('bloodForm');
+const postsDiv = document.getElementById('postsDisplay');
+const reqBtn = document.getElementById('reqBtn');
+const msgBox = document.getElementById('reqMsg');
+const loadingMsg = document.getElementById('loadingMsg');
 
 function showMsg(text, ok) {
     msgBox.textContent = text;
     msgBox.style.background = ok ? '#d4edda' : '#f8d7da';
-    msgBox.style.color      = ok ? '#155724' : '#721c24';
-    msgBox.style.display    = 'block';
+    msgBox.style.color = ok ? '#155724' : '#721c24';
+    msgBox.style.display = 'block';
     setTimeout(() => { msgBox.style.display = 'none'; }, 4000);
+}
+
+// Validate neededBy (must be a future date/time)
+function validateNeededBy(neededByValue) {
+    if (!neededByValue) {
+        return { valid: false, msg: 'Please specify when blood is needed' };
+    }
+    const selectedDate = new Date(neededByValue);
+    if (isNaN(selectedDate.getTime())) {
+        return { valid: false, msg: 'Invalid date/time' };
+    }
+    if (selectedDate <= new Date()) {
+        return { valid: false, msg: 'Needed date/time must be in the future' };
+    }
+    return { valid: true };
 }
 
 function validateForm() {
     let isValid = true;
-    
     const patientName = document.getElementById('patientName').value.trim();
     const bloodGroup = document.getElementById('bloodGroup').value;
     const bags = document.getElementById('bags').value;
     const hospital = document.getElementById('hospital').value.trim();
     const phone = document.getElementById('phone').value.trim();
-    
-    clearErrors('patientName', 'bloodGroup', 'bags', 'hospital', 'phone');
-    
-    // Validate patient name
+    const neededBy = document.getElementById('neededBy').value;
+
+    clearErrors('patientName', 'bloodGroup', 'bags', 'hospital', 'phone', 'neededBy');
+
     const nameVal = validateName(patientName);
-    if (!nameVal.valid) {
-        showError('patientName', nameVal.msg);
-        isValid = false;
-    }
-    
-    // Validate blood group
+    if (!nameVal.valid) { showError('patientName', nameVal.msg); isValid = false; }
+
     const bloodVal = validateBloodType(bloodGroup);
-    if (!bloodVal.valid) {
-        showError('bloodGroup', bloodVal.msg);
-        isValid = false;
-    }
-    
-    // Validate bags
+    if (!bloodVal.valid) { showError('bloodGroup', bloodVal.msg); isValid = false; }
+
     const bagsVal = validateBags(bags);
-    if (!bagsVal.valid) {
-        showError('bags', bagsVal.msg);
-        isValid = false;
-    }
-    
-    // Validate hospital (basic)
-    if (!hospital) {
-        showError('hospital', 'Hospital name is required');
-        isValid = false;
-    } else if (hospital.length < 3) {
+    if (!bagsVal.valid) { showError('bags', bagsVal.msg); isValid = false; }
+
+    if (!hospital || hospital.length < 3) {
         showError('hospital', 'Please enter a valid hospital name');
         isValid = false;
     }
-    
-    // Validate phone
+
     const phoneVal = validatePhone(phone);
-    if (!phoneVal.valid) {
-        showError('phone', phoneVal.msg);
-        isValid = false;
-    }
-    
+    if (!phoneVal.valid) { showError('phone', phoneVal.msg); isValid = false; }
+
+    const neededVal = validateNeededBy(neededBy);
+    if (!neededVal.valid) { showError('neededBy', neededVal.msg); isValid = false; }
+
     return isValid;
 }
 
-// Submit new request
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) {
-        showMsg('Please insert valid inputs before submitting.', false);
+        showMsg('Please fix the errors above before submitting.', false);
         return;
     }
-    
+
     const v = id => document.getElementById(id).value.trim();
     try {
         reqBtn.disabled = true;
         reqBtn.textContent = 'Submitting…';
         await addDoc(collection(db, 'public_requests'), {
             patientName: v('patientName'),
-            bloodGroup:  v('bloodGroup'),
-            bags:        parseInt(v('bags')),
-            hospital:    v('hospital'),
-            phone:       v('phone'),
-            status:      'pending',
-            createdAt:   serverTimestamp()
+            bloodGroup: v('bloodGroup'),
+            bags: parseInt(v('bags')),
+            hospital: v('hospital'),
+            phone: v('phone'),
+            neededBy: new Date(v('neededBy')),
+            status: 'approved',
+            createdAt: serverTimestamp()
         });
         showMsg('✅ Request posted successfully!', true);
         form.reset();
-        clearErrors('patientName', 'bloodGroup', 'bags', 'hospital', 'phone');
+        clearErrors('patientName', 'bloodGroup', 'bags', 'hospital', 'phone', 'neededBy');
     } catch (err) {
         console.error('Error posting request:', err);
         showMsg('❌ Failed to post request. Please try again.', false);
@@ -200,22 +211,58 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Real-time validation on blur
-document.getElementById('patientName').addEventListener('blur', () => { const r = validateName(document.getElementById('patientName').value.trim()); if(!r.valid) showError('patientName', r.msg); else showError('patientName', ''); });
-document.getElementById('bloodGroup').addEventListener('change', () => { const r = validateBloodType(document.getElementById('bloodGroup').value); if(!r.valid) showError('bloodGroup', r.msg); else showError('bloodGroup', ''); });
-document.getElementById('bags').addEventListener('blur', () => { const r = validateBags(document.getElementById('bags').value); if(!r.valid) showError('bags', r.msg); else showError('bags', ''); });
-document.getElementById('phone').addEventListener('blur', () => { const r = validatePhone(document.getElementById('phone').value.trim()); if(!r.valid) showError('phone', r.msg); else showError('phone', ''); });
+document.getElementById('patientName').addEventListener('blur', () => {
+    const r = validateName(document.getElementById('patientName').value.trim());
+    if (!r.valid) showError('patientName', r.msg); else showError('patientName', '');
+});
+document.getElementById('bloodGroup').addEventListener('change', () => {
+    const r = validateBloodType(document.getElementById('bloodGroup').value);
+    if (!r.valid) showError('bloodGroup', r.msg); else showError('bloodGroup', '');
+});
+document.getElementById('bags').addEventListener('blur', () => {
+    const r = validateBags(document.getElementById('bags').value);
+    if (!r.valid) showError('bags', r.msg); else showError('bags', '');
+});
+document.getElementById('phone').addEventListener('blur', () => {
+    const r = validatePhone(document.getElementById('phone').value.trim());
+    if (!r.valid) showError('phone', r.msg); else showError('phone', '');
+});
+document.getElementById('neededBy').addEventListener('change', () => {
+    const val = document.getElementById('neededBy').value;
+    const r = validateNeededBy(val);
+    if (!r.valid) showError('neededBy', r.msg); else showError('neededBy', '');
+});
 
-// Real-time listener — shows all pending requests newest first
+// Real-time feed: filter out expired requests
 const q = query(collection(db, 'public_requests'), orderBy('createdAt', 'desc'));
 onSnapshot(q, (snapshot) => {
     loadingMsg.style.display = 'none';
-    if (snapshot.empty) {
-        postsDiv.innerHTML = '<p style="text-align:center;color:#888;">No blood requests yet.</p>';
-        return;
-    }
-    let html = '';
+    const now = new Date();
+    let activeRequests = [];
     snapshot.forEach(doc => {
         const r = doc.data();
+        // Only approve status and not expired based on neededBy
+        if (r.status === 'approved') {
+            let expired = false;
+            if (r.neededBy) {
+                const neededDate = r.neededBy.toDate ? r.neededBy.toDate() : new Date(r.neededBy);
+                if (neededDate < now) {
+                    expired = true;
+                }
+            }
+            if (!expired) {
+                activeRequests.push({ id: doc.id, ...r });
+            }
+        }
+    });
+
+    if (activeRequests.length === 0) {
+        postsDiv.innerHTML = '<p style="text-align:center;color:#888;">No active blood requests.</p>';
+        return;
+    }
+
+    let html = '';
+    activeRequests.forEach(r => {
         const time = r.createdAt ? new Date(r.createdAt.toDate()).toLocaleString() : 'Just now';
         html += `
             <div class="blood-card">
@@ -269,6 +316,6 @@ onSnapshot(q, (snapshot) => {
     }
 })();
 </script>
- 
+
 </body>
 </html>
