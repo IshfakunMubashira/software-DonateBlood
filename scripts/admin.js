@@ -1,4 +1,4 @@
-// admin.js - Complete Admin Panel with external image URLs for events
+// admin.js - Complete Admin Panel (self-edit name only, no role/email/password)
 import { db, auth, storage, serverTimestamp, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, query, orderBy, onSnapshot, ref, uploadBytes, getDownloadURL, deleteObject } from '../firebase-init.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
@@ -657,7 +657,6 @@ async function refreshEvents() {
 }
 
 window.openEventModal = async function(eventId = null) {
-  // Reset form
   document.getElementById('eventTitle').value = '';
   document.getElementById('eventDate').value = '';
   document.getElementById('eventTime').value = '';
@@ -678,13 +677,10 @@ window.openEventModal = async function(eventId = null) {
       document.getElementById('eventLocation').value = ev.location || '';
       document.getElementById('eventDescription').value = ev.description || '';
       document.getElementById('eventForm').dataset.eventId = eventId;
-
-      // Show existing images and detect external URLs
       if (ev.images && ev.images.length) {
         let imagesHtml = '<p>Existing images:</p>';
         let externalUrls = [];
         ev.images.forEach((url, idx) => {
-          // Check if URL is from your Firebase Storage (contains "firebasestorage.googleapis.com")
           const isFirebaseStorage = url.includes('firebasestorage.googleapis.com');
           if (isFirebaseStorage) {
             imagesHtml += `<div class="existing-image-item"><img src="${url}" width="80"><span class="remove-image" onclick="removeEventImage('${eventId}', ${idx})">✖</span></div>`;
@@ -729,7 +725,6 @@ document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
   const files = document.getElementById('eventImages').files;
   const urlText = document.getElementById('eventImageUrls').value;
 
-  // Collect external URLs
   let externalUrls = [];
   if (urlText.trim()) {
     externalUrls = urlText.split('\n')
@@ -737,7 +732,6 @@ document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
       .filter(line => line.startsWith('http'));
   }
 
-  // Upload new files to Firebase Storage
   let uploadedUrls = [];
   if (files.length) {
     for (const file of files) {
@@ -748,59 +742,19 @@ document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
     }
   }
 
-  // For existing event, we must preserve existing images that were not removed.
-  // The existing images are shown in #existingImages but only those with remove button (Firebase URLs) can be removed.
-  // External URLs are managed via textarea, so we will replace them completely.
-  // The simplest approach: fetch the existing event's images, filter out the ones that were removed,
-  // then merge with newly uploaded + external URLs.
-  let finalImages = [...externalUrls, ...uploadedUrls];
-  if (eventId) {
-    const existingSnap = await getDoc(doc(db, 'events', eventId));
-    if (existingSnap.exists()) {
-      const oldImages = existingSnap.data().images || [];
-      // Keep only Firebase Storage images that are still present (not removed)
-      // Removed Firebase images have been deleted via removeEventImage, so we can fetch the current list from the doc again?
-      // To keep it simple, we will rely on the fact that when we open the modal, we show existing images with remove buttons.
-      // The remove buttons delete the image from storage AND update the Firestore array immediately (see removeEventImage).
-      // So when we save, the Firestore already reflects the removal. Therefore we should NOT re-add old images.
-      // However, external URLs are managed separately: they will be replaced by current textarea content.
-      // Therefore we only add the new uploads and the external URLs.
-      // No need to add old Firebase images because they are already in Firestore and not being modified.
-      // For external URLs, we are replacing them entirely.
-    }
-  }
-
   const data = { title, date, time, location, description, updatedAt: serverTimestamp() };
-  if (finalImages.length) data.images = finalImages;
-
   try {
     if (eventId) {
-      // For update, we need to merge images? Actually replace images with the new set.
-      // But we must preserve Firebase Storage images that were not removed (they are already in the document).
-      // The user might have added new external URLs and new files, but not touched existing Firebase images.
-      // The current logic: finalImages contains only external URLs + newly uploaded files.
-      // This would erase existing Firebase images. To avoid that, we should:
-      // - Get current images
-      // - Keep those that are from Firebase Storage and not removed (but we don't know which were removed because removeEventImage already deleted from Firestore)
-      // The easiest: when loading modal, we store the original image array. On save, we combine: original Firebase images that still exist + new uploads + external URLs.
-      // But that's complex. Alternative: treat external URLs as additive, and allow removal of any image via separate UI.
-      // Given the scope, I'll simplify: when editing, the textarea shows external URLs that were previously saved. The user can edit them.
-      // Any image that was uploaded (Firebase) remains unless user clicks the X button (which deletes from Firestore and storage).
-      // So after removal, the Firestore array no longer contains that URL. When saving, we must not re-add it.
-      // Therefore we should fetch the current event's images (after any removals) and then add new uploads & external URLs.
       const currentEventSnap = await getDoc(doc(db, 'events', eventId));
       let currentImages = currentEventSnap.exists() ? (currentEventSnap.data().images || []) : [];
-      // Remove any existing external URLs (since they will be replaced by textarea)
-      currentImages = currentImages.filter(url => !url.startsWith('http') || url.includes('firebasestorage.googleapis.com'));
-      // Merge with new external URLs and new uploads
+      currentImages = currentImages.filter(url => url.includes('firebasestorage.googleapis.com'));
       const merged = [...currentImages, ...uploadedUrls, ...externalUrls];
       data.images = merged;
-    }
-    if (eventId) {
       await updateDoc(doc(db, 'events', eventId), data);
     } else {
       data.createdAt = serverTimestamp();
       data.status = 'upcoming';
+      data.images = [...uploadedUrls, ...externalUrls];
       await addDoc(collection(db, 'events'), data);
     }
     closeEventModal();
@@ -822,7 +776,7 @@ window.deleteEvent = async function(id) {
   }
 };
 
-// ------------------- ADMINS -------------------
+// ------------------- ADMINS (view only + self-edit name only) -------------------
 async function loadAdmins() {
   try {
     const snap = await getDocs(collection(db, 'admins'));
@@ -831,65 +785,96 @@ async function loadAdmins() {
     let html = '';
     snap.forEach(doc => {
       const a = doc.data();
-      html += `<tr>
-        <td>${a.name}</td>
-        <td>${doc.id}</td>
-        <td>${a.role}</td>
-        <td>${a.lastLogin ? new Date(a.lastLogin.toDate()).toLocaleString() : 'Never'}</td>
-        <td><span class="eligible-badge ${a.active}">${a.active ? 'Active' : 'Inactive'}</span></td>
-        <td><button class="action-btn delete" onclick="deleteAdmin('${doc.id}')"><i class="fa-solid fa-trash"></i></button></td>
-      </tr>`;
+      const isCurrentUser = (doc.id === currentUser.email);
+      const editButton = isCurrentUser
+        ? `<button class="action-btn edit" onclick="openSelfEditModal()"><i class="fa-solid fa-user-pen"></i> Edit Profile</button>`
+        : '';
+      html += `
+        <tr>
+          <td>${a.name}</td>
+          <td>${doc.id}</td>
+          <td>${a.role}</td>
+          <td>${a.lastLogin ? new Date(a.lastLogin.toDate()).toLocaleString() : 'Never'}</td>
+          <td><span class="eligible-badge ${a.active}">${a.active ? 'Active' : 'Inactive'}</span></td>
+          <td>${editButton}</td>
+        </tr>`;
     });
     tbody.innerHTML = html;
-  } catch (error) { console.error(error); document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="6">Error loading admins</td></tr>'; }
+  } catch (error) {
+    console.error(error);
+    document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="6">Error loading admins</td></tr>';
+  }
 }
+
+window.openSelfEditModal = async function() {
+  const email = currentUser.email;
+  const docSnap = await getDoc(doc(db, 'admins', email));
+  if (!docSnap.exists()) {
+    showNotification('Your admin profile not found', 'error');
+    return;
+  }
+  const data = docSnap.data();
+  let modal = document.getElementById('selfEditModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'selfEditModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width:400px;">
+        <span class="close-btn" onclick="closeSelfEditModal()">&times;</span>
+        <h2>Edit Your Profile</h2>
+        <form id="selfEditForm">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="selfEditName" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="selfEditEmail" readonly disabled style="background:#f0f0f0;">
+            <small>Email cannot be changed here.</small>
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <input type="text" id="selfEditRole" readonly disabled style="background:#f0f0f0;">
+          </div>
+          <button type="submit" class="btn-primary">Save Name</button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('selfEditForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newName = document.getElementById('selfEditName').value.trim();
+      if (!newName) { showNotification('Name is required', 'error'); return; }
+      try {
+        await updateDoc(doc(db, 'admins', email), { name: newName, updatedAt: serverTimestamp() });
+        closeSelfEditModal();
+        await refreshAdmins();
+        document.getElementById('adminName').textContent = newName;
+        showNotification('Profile updated', 'success');
+      } catch (error) {
+        console.error(error);
+        showNotification('Update failed: ' + error.message, 'error');
+      }
+    });
+  }
+  // Pre-fill form
+  document.getElementById('selfEditName').value = data.name || '';
+  document.getElementById('selfEditEmail').value = email;
+  document.getElementById('selfEditRole').value = data.role || 'viewer';
+  modal.style.display = 'block';
+};
+
+window.closeSelfEditModal = function() {
+  const modal = document.getElementById('selfEditModal');
+  if (modal) modal.style.display = 'none';
+};
 
 async function refreshAdmins() {
   document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="6" class="loading">Refreshing...</td></tr>';
   await loadAdmins();
-  showNotification('Admins refreshed', 'success');
+  showNotification('Admin list refreshed', 'success');
 }
-
-window.openAdminModal = () => {
-  document.getElementById('adminName').value = '';
-  document.getElementById('adminEmail').value = '';
-  document.getElementById('adminRole').value = 'editor';
-  document.getElementById('adminModal').style.display = 'block';
-};
-
-document.getElementById('adminForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name = document.getElementById('adminName').value.trim();
-  if (!name) { showNotification('Admin name is required', 'error'); return; }
-  let email = document.getElementById('adminEmail').value.trim();
-  if (!email) { showNotification('Email address is required', 'error'); return; }
-  email = email.toLowerCase();
-  if (!email.includes('@') || !email.includes('.')) {
-    showNotification('Please enter a valid email address', 'error');
-    return;
-  }
-  const role = document.getElementById('adminRole').value || 'editor';
-  try {
-    await setDoc(doc(db, 'admins', email), { name, role, active: true, createdAt: serverTimestamp() });
-    closeAdminModal();
-    await refreshAdmins();
-    showNotification(`Admin ${name} added successfully`, 'success');
-  } catch (error) {
-    console.error(error);
-    showNotification('Failed to add admin: ' + error.message, 'error');
-  }
-});
-
-window.deleteAdmin = async (email) => {
-  if (email === currentUser.email) { showNotification('Cannot delete yourself', 'error'); return; }
-  if (confirm('Remove this admin?')) {
-    try {
-      await deleteDoc(doc(db, 'admins', email));
-      await refreshAdmins();
-      showNotification('Admin removed', 'success');
-    } catch (error) { showNotification('Delete failed', 'error'); }
-  }
-};
 
 // ------------------- SETTINGS (General & Social only) -------------------
 async function loadSettings() {
@@ -963,7 +948,6 @@ window.closeDonorEditModal = () => document.getElementById('donorEditModal').sty
 window.closeRequestEditModal = () => document.getElementById('requestEditModal').style.display = 'none';
 window.closeInventoryModal = () => document.getElementById('inventoryModal').style.display = 'none';
 window.closeEventModal = () => document.getElementById('eventModal').style.display = 'none';
-window.closeAdminModal = () => document.getElementById('adminModal').style.display = 'none';
 
 // ------------------- Event Listeners for Filters -------------------
 document.getElementById('donorSearch')?.addEventListener('input', debounce(applyDonorFilters, 300));
@@ -998,4 +982,3 @@ window.exportDonors = exportDonors;
 window.openInventoryModal = openInventoryModal;
 window.openEventModal = openEventModal;
 window.deleteEvent = deleteEvent;
-window.openAdminModal = openAdminModal;

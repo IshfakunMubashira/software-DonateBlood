@@ -380,9 +380,6 @@
             <div id="admins" class="tab-content">
                 <div class="content-header">
                     <h1><i class="fa-solid fa-user-shield"></i> Admin Management</h1>
-                    <button class="btn-primary" onclick="openAdminModal()">
-                        <i class="fa-solid fa-plus"></i> Add Admin
-                    </button>
                 </div>
 
                 <!-- Admins Table -->
@@ -551,37 +548,6 @@
 </div>
 
     <!-- Admin Modal -->
-    <div id="adminModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeAdminModal()">&times;</span>
-            <h2>Add New Admin</h2>
-            <form id="adminForm">
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="adminName" required>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="adminEmail" required>
-                </div>
-                <div class="form-group">
-                    <label>Role</label>
-                    <select id="adminRole" required>
-                        <option value="editor">Editor</option>
-                        <option value="super_admin">Super Admin</option>
-                        <option value="viewer">Viewer</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Temporary Password</label>
-                    <input type="text" id="adminPassword" value="donate@123" required>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn-primary">Add Admin</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Donor Edit Modal -->
 <div id="donorEditModal" class="modal">
