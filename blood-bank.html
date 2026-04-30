@@ -334,7 +334,7 @@ bankForm.addEventListener('submit', async e => {
     e.preventDefault();
     
     if (!validateBankForm()) {
-        showBankMsg('Please fix the errors above before submitting.', false);
+        showBankMsg('Please enter valid inputs before submitting.', false);
         return;
     }
     
