@@ -2,22 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>DonateLife | Blood Donor Registration</title>
     <link rel="shortcut icon" href="images/favicon.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles/donate-blood.css">
     <link rel="stylesheet" href="styles/navbar.css">
     <link rel="stylesheet" href="styles/footer.css">
-    <style>
-        .error-text { color: red; font-size: 0.8rem; margin-top: 4px; display: block; }
-        .input-error { border-color: red !important; }
-    </style>
 </head>
 <body>
 
 <nav>
-    <div class="logo"><img src="images/logo (2).png" alt=""></div>
+    <div class="logo"><img src="images/logo (2).png" alt="DonateLife Logo"></div>
     <ul class="nav">
         <li><a href="index.html">Home</a></li>
         <li><a href="blood-bank.html">Blood Bank</a></li>
@@ -34,87 +30,151 @@
         <p class="form-note">DonateLife is a private, non-governmental platform that connects voluntary blood donors with patients and hospitals across Bangladesh.</p>
     </header>
 
-    <div id="formMsg" style="display:none;padding:14px 18px;border-radius:6px;margin-bottom:20px;font-weight:600;"></div>
+    <!-- Success message only (hidden by default) -->
+    <div id="successMsg" style="display:none;padding:14px 18px;border-radius:6px;margin-bottom:20px;background:#d4edda;color:#155724;font-weight:600;"></div>
 
     <form id="donorForm">
         <fieldset>
             <legend>Personal Information</legend>
-            <div class="row"><div class="col"><label>Full Name *</label><input type="text" id="name" required><span id="name-error" class="error-text"></span></div></div>
             <div class="row">
-                <div class="col"><label>National ID (NID) No.</label><input type="text" id="nid"><span id="nid-error" class="error-text"></span></div>
-                <div class="col"><label>Passport No. (If Foreign National)</label><input type="text" id="passport"><span id="passport-error" class="error-text"></span></div>
+                <div class="col">
+                    <label>Full Name <span class="required-star">*</span></label>
+                    <input type="text" id="name" placeholder="e.g. Md. Karim Uddin" autocomplete="name">
+                    <span id="name-error" class="error-text"></span>
+                </div>
             </div>
+
+            <div class="nid-passport-group">
+                <div class="group-header">
+                    <label>Identification <span class="required-star">*</span></label>
+                    <div class="helper-text">
+                        <i class="fas fa-info-circle"></i> Provide either NID OR Passport (only one required)
+                    </div>
+                </div>
+                <div class="identification-fields">
+                    <div class="col">
+                        <label>National ID (NID)</label>
+                        <input type="text" id="nid" placeholder="10, 13 or 17 digits" autocomplete="off">
+                        <span id="nid-error" class="error-text"></span>
+                    </div>
+                    <div class="col">
+                        <label>Passport Number</label>
+                        <input type="text" id="passport" placeholder="6–12 alphanumeric characters" autocomplete="off">
+                        <span id="passport-error" class="error-text"></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
-                <div class="col"><label>Date of Birth *</label><input type="date" id="dob" required><span id="dob-error" class="error-text"></span></div>
-                <div class="col"><label>Gender *</label>
-                    <select id="gender" required><option value="">Select</option><option>Male</option><option>Female</option></select>
+                <div class="col">
+                    <label>Date of Birth <span class="required-star">*</span></label>
+                    <input type="date" id="dob">
+                    <span id="dob-error" class="error-text"></span>
+                </div>
+                <div class="col">
+                    <label>Gender <span class="required-star">*</span></label>
+                    <select id="gender">
+                        <option value="">Select</option>
+                        <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
                     <span id="gender-error" class="error-text"></span>
                 </div>
             </div>
+
             <div class="row">
-                <div class="col"><label>Blood Group *</label>
-                    <select id="bloodGroup" required>
+                <div class="col">
+                    <label>Blood Group <span class="required-star">*</span></label>
+                    <select id="bloodGroup">
                         <option value="">Select</option>
                         <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
                         <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
                     </select>
                     <span id="bloodGroup-error" class="error-text"></span>
                 </div>
-                <div class="col"><label>Last Blood Donation Date</label><input type="date" id="lastDonation"><span id="lastDonation-error" class="error-text"></span></div>
+                <div class="col">
+                    <label>Last Blood Donation Date</label>
+                    <input type="date" id="lastDonation">
+                    <span id="lastDonation-error" class="error-text"></span>
+                    <span class="field-hint">(Optional, but if provided must be ≥ 4 months ago)</span>
+                </div>
             </div>
+
             <div class="row">
-                <div class="col"><label>Mobile Number *</label><input type="tel" id="phone" placeholder="01XXXXXXXXX" required><span id="phone-error" class="error-text"></span></div>
-                <div class="col"><label>Email Address</label><input type="email" id="email"><span id="email-error" class="error-text"></span></div>
+                <div class="col">
+                    <label>Mobile Number <span class="required-star">*</span></label>
+                    <input type="tel" id="phone" placeholder="01XXXXXXXXX" autocomplete="tel">
+                    <span id="phone-error" class="error-text"></span>
+                </div>
+                <div class="col">
+                    <label>Email Address</label>
+                    <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+                    <span id="email-error" class="error-text"></span>
+                </div>
             </div>
+
             <div class="row">
-                <div class="col"><label>District *</label><input type="text" id="district" placeholder="e.g. Dhaka" required><span id="district-error" class="error-text"></span></div>
-                <div class="col"><label>Area / Thana *</label><input type="text" id="area" placeholder="e.g. Mirpur, Kotwali" required><span id="area-error" class="error-text"></span></div>
+                <div class="col">
+                    <label>District <span class="required-star">*</span></label>
+                    <input type="text" id="district" placeholder="e.g. Dhaka">
+                    <span id="district-error" class="error-text"></span>
+                </div>
+                <div class="col">
+                    <label>Area / Thana <span class="required-star">*</span></label>
+                    <input type="text" id="area" placeholder="e.g. Mirpur, Kotwali">
+                    <span id="area-error" class="error-text"></span>
+                </div>
             </div>
         </fieldset>
 
         <div class="warning-box">
-            <h4>Important Safety Notice</h4>
+            <h4><i class="fas fa-exclamation-triangle"></i> Important Safety Notice</h4>
             <p>Please do <strong>not</strong> register if you believe your blood may not be safe for donation due to any illness, infection, or high-risk behavior.</p>
         </div>
 
         <fieldset>
             <legend>Health &amp; Eligibility Questions</legend>
             <table class="question-table">
-                <tr><th>No.</th><th>Question</th><th>Yes</th><th>No</th></tr>
-                <tr><td>1</td><td>Are you feeling physically well today?</td><td><input type="radio" name="q1" value="yes" required></td><td><input type="radio" name="q1" value="no"></td></tr>
-                <tr><td>2</td><td>Have you had fever, cold, or infection in the last 7 days?</td><td><input type="radio" name="q2" value="yes" required></td><td><input type="radio" name="q2" value="no"></td></tr>
-                <tr><td>3</td><td>Have you had tattooing, piercing, or major surgery in the last 6 months?</td><td><input type="radio" name="q3" value="yes" required></td><td><input type="radio" name="q3" value="no"></td></tr>
-                <tr><td>4</td><td>Are you aware that DonateLife is not a diagnostic or testing service?</td><td><input type="radio" name="q4" value="yes" required></td><td><input type="radio" name="q4" value="no"></td></tr>
+                <thead><tr><th>No.</th><th>Question</th><th>Yes</th><th>No</th></tr></thead>
+                <tbody>
+                    <tr><td>1</td><td>Are you feeling physically well today?</td><td><input type="radio" name="q1" value="yes" required></td><td><input type="radio" name="q1" value="no"></td></tr>
+                    <tr><td>2</td><td>Have you had fever, cold, or infection in the last 7 days?</td><td><input type="radio" name="q2" value="yes" required></td><td><input type="radio" name="q2" value="no"></td></tr>
+                    <tr><td>3</td><td>Have you had tattooing, piercing, or major surgery in the last 6 months?</td><td><input type="radio" name="q3" value="yes" required></td><td><input type="radio" name="q3" value="no"></td></tr>
+                    <tr><td>4</td><td>Are you aware that DonateLife is not a diagnostic or testing service?</td><td><input type="radio" name="q4" value="yes" required></td><td><input type="radio" name="q4" value="no"></td></tr>
+                </tbody>
             </table>
         </fieldset>
 
         <fieldset>
             <legend>For Female Donors Only</legend>
-            <div class="row">
-                <div class="col"><label>Are you currently pregnant or breastfeeding?</label><br><input type="radio" name="female_q1" value="yes"> Yes <input type="radio" name="female_q1" value="no"> No</div>
-                <div class="col"><label>Have you delivered a baby within the last 6 months?</label><br><input type="radio" name="female_q2" value="yes"> Yes <input type="radio" name="female_q2" value="no"> No</div>
+            <div class="row female-row">
+                <div class="col">
+                    <label>Are you currently pregnant or breastfeeding?</label>
+                    <div class="radio-group"><label><input type="radio" name="female_q1" value="yes"> Yes</label> <label><input type="radio" name="female_q1" value="no"> No</label></div>
+                </div>
+                <div class="col">
+                    <label>Have you delivered a baby within the last 6 months?</label>
+                    <div class="radio-group"><label><input type="radio" name="female_q2" value="yes"> Yes</label> <label><input type="radio" name="female_q2" value="no"> No</label></div>
+                </div>
             </div>
         </fieldset>
 
         <div class="declaration">
-            <label><input type="checkbox" id="declaration" required> I confirm that all information provided is true and accurate. I understand that DonateLife only connects donors and recipients and that actual blood donation will take place at a licensed hospital or blood bank.</label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="declaration"> 
+                <span>I confirm that all information provided is true and accurate. I understand that DonateLife only connects donors and recipients and that actual blood donation will take place at a licensed hospital or blood bank. <span class="required-star">*</span></span>
+            </label>
             <span id="declaration-error" class="error-text"></span>
         </div>
 
         <div class="btn-group">
-            <button type="submit" class="submit-btn" id="submitBtn">Register as Donor</button>
-            <button type="reset" class="reset-btn">Clear Form</button>
+            <button type="submit" class="submit-btn" id="submitBtn"><i class="fas fa-hand-holding-heart"></i> Register as Donor</button>
+            <button type="reset" class="reset-btn"><i class="fas fa-undo-alt"></i> Clear Form</button>
         </div>
     </form>
 </div>
 
-<!-- FOOTER -->
 <footer class="footer">
-    <div class="footer-box">
-        <img src="images/footer-logo.png" alt="">
-        <h1>Donate Blood, Save Life</h1>
-    </div>
-
+    <div class="footer-box"><img src="images/footer-logo.png" alt=""><h1>Donate Blood, Save Life</h1></div>
     <div class="footer-box">
         <h3>Important Links</h3>
         <a href="index.html">Home</a>
@@ -123,295 +183,353 @@
         <a href="request.html">Blood Request</a>
         <a href="donate-blood.html">Donate Blood</a>
     </div>
-
     <div class="footer-box">
-    <h3>Contact & Socials</h3>
-
+        <h3>Contact & Socials</h3>
         <p>Phone: <a href="tel:+8801822162664">01822162664</a></p>
-    
         <p>Email: <a href="mailto:donatelife2026@gmail.com">donatelife2026@gmail.com</a></p>
-    
         <div class="socials">
-            <a href="https://facebook.com" target="_blank"><i class="fa-brands fa-facebook"></i></a>
-            <a href="https://instagram.com" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-            <a href="https://twitter.com" target="_blank"><i class="fa-brands fa-twitter"></i></a>
+            <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
         </div>
     </div>
-
-    <!-- Copyright -->
-    <div class="footer-bottom">
-        <p>© 2026 DonateLife. All Rights Reserved.</p>
-    </div>
+    <div class="footer-bottom"><p>© 2026 DonateLife. All Rights Reserved.</p></div>
 </footer>
 
 <script type="module">
-import { db } from './firebase-init.js';
-import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-import { validateName, validatePhone, validateEmail, validateBloodType, validateDate, showError, clearErrors } from './validators.js';
+    import { db } from './firebase-init.js';
+    import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+    import { validateName, validatePhone, validateEmail, validateBloodType, validateDate, validateNID, validatePassport, showError, clearErrors } from './validators.js';
 
-const form      = document.getElementById('donorForm');
-const submitBtn = document.getElementById('submitBtn');
-const msgBox    = document.getElementById('formMsg');
+    const form = document.getElementById('donorForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successMsgDiv = document.getElementById('successMsg');
 
-function showMsg(text, ok) {
-    msgBox.textContent = text;
-    msgBox.style.background = ok ? '#d4edda' : '#f8d7da';
-    msgBox.style.color      = ok ? '#155724' : '#721c24';
-    msgBox.style.display    = 'block';
-    msgBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function calcAge(dobStr) {
-    if (!dobStr) return null;
-    const today = new Date(), dob = new Date(dobStr);
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-    return age;
-}
-
-function validateForm() {
-    let isValid = true;
-    
-    // Get values
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const bloodGroup = document.getElementById('bloodGroup').value;
-    const dob = document.getElementById('dob').value;
-    const lastDonation = document.getElementById('lastDonation').value;
-    const district = document.getElementById('district').value.trim();
-    const area = document.getElementById('area').value.trim();
-    const gender = document.getElementById('gender').value;
-    const declaration = document.getElementById('declaration').checked;
-    
-    // Clear previous errors
-    clearErrors('name', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
-    
-    // Validate name
-    const nameVal = validateName(name);
-    if (!nameVal.valid) {
-        showError('name', nameVal.msg);
-        isValid = false;
+    function showSuccessMessage(text) {
+        successMsgDiv.textContent = text;
+        successMsgDiv.style.display = 'block';
+        successMsgDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-    
-    // Validate phone
-    const phoneVal = validatePhone(phone);
-    if (!phoneVal.valid) {
-        showError('phone', phoneVal.msg);
-        isValid = false;
+
+    function calcAge(dobStr) {
+        if (!dobStr) return null;
+        const today = new Date(), dob = new Date(dobStr);
+        let age = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+        return age;
     }
-    
-    // Validate email (optional)
-    if (email) {
-        const emailVal = validateEmail(email);
-        if (!emailVal.valid) {
-            showError('email', emailVal.msg);
-            isValid = false;
+
+    function validateIdentificationGroup() {
+        const nid = document.getElementById('nid').value.trim();
+        const passport = document.getElementById('passport').value.trim();
+        clearErrors('nid', 'passport');
+        if (!nid && !passport) {
+            showError('nid', 'Either NID or Passport is required');
+            showError('passport', 'Either NID or Passport is required');
+            return false;
         }
+        if (nid && passport) {
+            showError('nid', 'Use only one identification method (NID or Passport)');
+            showError('passport', 'Use only one identification method (NID or Passport)');
+            return false;
+        }
+        if (nid) {
+            const nidRes = validateNID(nid);
+            if (!nidRes.valid) { showError('nid', nidRes.msg); return false; }
+            showError('nid', '');
+        }
+        if (passport) {
+            const passRes = validatePassport(passport);
+            if (!passRes.valid) { showError('passport', passRes.msg); return false; }
+            showError('passport', '');
+        }
+        return true;
     }
-    
-    // Validate blood group
-    const bloodVal = validateBloodType(bloodGroup);
-    if (!bloodVal.valid) {
-        showError('bloodGroup', bloodVal.msg);
-        isValid = false;
-    }
-    
-    // Validate date of birth (not future)
-    if (dob) {
-        const dobVal = validateDate(dob, false);
-        if (!dobVal.valid) {
-            showError('dob', dobVal.msg);
-            isValid = false;
-        } else {
-            const age = calcAge(dob);
-            if (age < 18 || age > 60) {
-                showError('dob', 'Age must be between 18 and 60 years');
-                isValid = false;
+
+    // Full validation – shows errors inline, no popup message
+    function validateFullForm() {
+        let isValid = true;
+        clearErrors('name', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
+        
+        // Name
+        const nameRes = validateName(document.getElementById('name').value.trim());
+        if (!nameRes.valid) { showError('name', nameRes.msg); isValid = false; }
+        
+        // NID/Passport
+        if (!validateIdentificationGroup()) isValid = false;
+        
+        // DOB
+        const dob = document.getElementById('dob').value;
+        if (!dob) { showError('dob', 'Date of birth is required'); isValid = false; }
+        else {
+            const dobRes = validateDate(dob, false);
+            if (!dobRes.valid) { showError('dob', dobRes.msg); isValid = false; }
+            else {
+                const age = calcAge(dob);
+                if (age < 18 || age > 60) { showError('dob', 'Age must be between 18 and 60 years'); isValid = false; }
             }
         }
-    } else {
-        showError('dob', 'Date of birth is required');
-        isValid = false;
+        
+        // Gender
+        if (!document.getElementById('gender').value) { showError('gender', 'Gender is required'); isValid = false; }
+        
+        // Blood group
+        const bloodRes = validateBloodType(document.getElementById('bloodGroup').value);
+        if (!bloodRes.valid) { showError('bloodGroup', bloodRes.msg); isValid = false; }
+        
+        // Last donation (if provided)
+        const lastDonation = document.getElementById('lastDonation').value;
+        if (lastDonation) {
+            const lastRes = validateDate(lastDonation, false, true);
+            if (!lastRes.valid) { showError('lastDonation', lastRes.msg); isValid = false; }
+        }
+        
+        // Phone
+        const phoneRes = validatePhone(document.getElementById('phone').value.trim());
+        if (!phoneRes.valid) { showError('phone', phoneRes.msg); isValid = false; }
+        
+        // Email (optional)
+        const email = document.getElementById('email').value.trim();
+        if (email) {
+            const emailRes = validateEmail(email);
+            if (!emailRes.valid) { showError('email', emailRes.msg); isValid = false; }
+        }
+        
+        // District
+        const district = document.getElementById('district').value.trim();
+        if (!district || district.length < 2) { showError('district', 'District is required (min 2 chars)'); isValid = false; }
+        
+        // Area
+        const area = document.getElementById('area').value.trim();
+        if (!area || area.length < 2) { showError('area', 'Area is required (min 2 chars)'); isValid = false; }
+        
+        // Declaration
+        if (!document.getElementById('declaration').checked) { showError('declaration', 'You must accept the declaration'); isValid = false; }
+        
+        // Health questions
+        const q1 = document.querySelector('input[name="q1"]:checked');
+        const q2 = document.querySelector('input[name="q2"]:checked');
+        const q3 = document.querySelector('input[name="q3"]:checked');
+        const q4 = document.querySelector('input[name="q4"]:checked');
+        if (!q1 || !q2 || !q3 || !q4) {
+            // Show a small alert but also highlight? The radios have 'required' attribute, but we also check manually.
+            alert('Please answer all health eligibility questions.');
+            isValid = false;
+        }
+        
+        return isValid;
     }
+
+    // Attach real-time validation (blur + input clearing)
+    function attachRealtimeValidation() {
+        const fields = ['name', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender'];
+        fields.forEach(fieldId => {
+            const el = document.getElementById(fieldId);
+            if (!el) return;
+            el.addEventListener('blur', () => {
+                let value = el.value;
+                if (fieldId !== 'dob' && fieldId !== 'lastDonation') value = value.trim();
+                let res;
+                switch(fieldId) {
+                    case 'name': res = validateName(value); break;
+                    case 'phone': res = validatePhone(value); break;
+                    case 'email': res = value ? validateEmail(value) : { valid: true }; break;
+                    case 'bloodGroup': res = validateBloodType(value); break;
+                    case 'dob': res = value ? validateDate(value, false) : { valid: false, msg: 'Date of birth is required' }; break;
+                    case 'lastDonation': res = value ? validateDate(value, false, true) : { valid: true }; break;
+                    case 'district': res = (value && value.length>=2) ? { valid: true } : { valid: false, msg: 'District is required (min 2 chars)' }; break;
+                    case 'area': res = (value && value.length>=2) ? { valid: true } : { valid: false, msg: 'Area is required (min 2 chars)' }; break;
+                    case 'gender': res = value ? { valid: true } : { valid: false, msg: 'Gender is required' }; break;
+                    default: res = { valid: true };
+                }
+                if (!res.valid) showError(fieldId, res.msg);
+                else showError(fieldId, '');
+                if (fieldId === 'dob' && value && res.valid) {
+                    const age = calcAge(value);
+                    if (age < 18 || age > 60) showError('dob', 'Age must be 18-60 years');
+                    else showError('dob', '');
+                }
+            });
+            el.addEventListener('input', () => showError(fieldId, ''));
+        });
+
+        // NID / Passport mutual disable
+        const nid = document.getElementById('nid');
+        const passport = document.getElementById('passport');
+        function mutualDisable(active, other) {
+            if (active.value.trim()) {
+                other.value = '';
+                other.disabled = true;
+                other.classList.add('disabled-field');
+                showError(other.id, '');
+                if (active.id === 'nid') {
+                    const nidRes = validateNID(active.value.trim());
+                    if (!nidRes.valid) showError('nid', nidRes.msg);
+                    else showError('nid', '');
+                } else {
+                    const passRes = validatePassport(active.value.trim());
+                    if (!passRes.valid) showError('passport', passRes.msg);
+                    else showError('passport', '');
+                }
+            } else {
+                other.disabled = false;
+                other.classList.remove('disabled-field');
+                if (!nid.value.trim() && !passport.value.trim()) {
+                    showError('nid', 'Either NID or Passport is required');
+                    showError('passport', 'Either NID or Passport is required');
+                } else {
+                    showError('nid', '');
+                    showError('passport', '');
+                }
+            }
+        }
+        nid.addEventListener('input', () => mutualDisable(nid, passport));
+        passport.addEventListener('input', () => mutualDisable(passport, nid));
+        nid.addEventListener('blur', () => {
+            if (!nid.value.trim() && !passport.value.trim()) {
+                showError('nid', 'Either NID or Passport is required');
+                showError('passport', 'Either NID or Passport is required');
+            } else if (nid.value.trim() && !passport.disabled) {
+                const nidRes = validateNID(nid.value.trim());
+                if (!nidRes.valid) showError('nid', nidRes.msg);
+                else showError('nid', '');
+            }
+        });
+        passport.addEventListener('blur', () => {
+            if (!nid.value.trim() && !passport.value.trim()) {
+                showError('nid', 'Either NID or Passport is required');
+                showError('passport', 'Either NID or Passport is required');
+            } else if (passport.value.trim() && !nid.disabled) {
+                const passRes = validatePassport(passport.value.trim());
+                if (!passRes.valid) showError('passport', passRes.msg);
+                else showError('passport', '');
+            }
+        });
+
+        const declCheck = document.getElementById('declaration');
+        declCheck.addEventListener('change', () => {
+            if (declCheck.checked) showError('declaration', '');
+            else showError('declaration', 'You must accept the declaration');
+        });
+    }
+
+    // Reset handler
+    function setupReset() {
+        form.addEventListener('reset', () => {
+            setTimeout(() => {
+                clearErrors('name', 'nid', 'passport', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
+                const nid = document.getElementById('nid');
+                const passport = document.getElementById('passport');
+                nid.disabled = false;
+                passport.disabled = false;
+                nid.classList.remove('disabled-field');
+                passport.classList.remove('disabled-field');
+                document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+                successMsgDiv.style.display = 'none';
+            }, 10);
+        });
+    }
+
+    // Submit handler – no generic error message, just field errors + success message
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!validateFullForm()) {
+            // Scroll to first error field
+            const firstError = document.querySelector('.input-error');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        
+        const getRadio = (name) => {
+            const selected = document.querySelector(`input[name="${name}"]:checked`);
+            return selected ? selected.value : null;
+        };
+        
+        const dob = document.getElementById('dob').value;
+        const age = calcAge(dob);
+        const lastDonation = document.getElementById('lastDonation').value || null;
+        let lastDonationMonths = null;
+        if (lastDonation) {
+            const diff = (new Date() - new Date(lastDonation)) / (1000 * 60 * 60 * 24 * 30.44);
+            lastDonationMonths = Math.floor(diff);
+        }
+        
+        const nidRaw = document.getElementById('nid').value.trim();
+        const passportRaw = document.getElementById('passport').value.trim();
+        let finalNid = null, finalPassport = null;
+        if (nidRaw) { const v = validateNID(nidRaw); if (v.valid) finalNid = v.value; }
+        if (passportRaw) { const v = validatePassport(passportRaw); if (v.valid) finalPassport = v.value; }
+        
+        const donorData = {
+            name: document.getElementById('name').value.trim(),
+            nid: finalNid, passport: finalPassport,
+            dob, age, gender: document.getElementById('gender').value,
+            bloodGroup: document.getElementById('bloodGroup').value,
+            lastDonation: lastDonation || null, lastDonationMonths,
+            phone: document.getElementById('phone').value.trim(),
+            email: document.getElementById('email').value.trim() || null,
+            district: document.getElementById('district').value.trim(),
+            area: document.getElementById('area').value.trim(),
+            healthQ1: getRadio('q1'), healthQ2: getRadio('q2'), healthQ3: getRadio('q3'), healthQ4: getRadio('q4'),
+            femaleQ1: getRadio('female_q1'), femaleQ2: getRadio('female_q2'),
+            eligible: (getRadio('q1') === 'yes' && getRadio('q2') === 'no' && getRadio('q3') === 'no' && age >= 18 && age <= 60),
+            createdAt: serverTimestamp()
+        };
+        
+        try {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Registering...';
+            await addDoc(collection(db, 'donors'), donorData);
+            showSuccessMessage('✅ Registration successful! Thank you for registering as a blood donor.');
+            form.reset();
+            document.getElementById('nid').disabled = false;
+            document.getElementById('passport').disabled = false;
+            document.getElementById('nid').classList.remove('disabled-field');
+            document.getElementById('passport').classList.remove('disabled-field');
+            clearErrors('name', 'nid', 'passport', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
+            setTimeout(() => { window.location.href = "search-donor.html"; }, 2000);
+        } catch (err) {
+            console.error(err);
+            alert('Registration failed. Please check your connection and try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-hand-holding-heart"></i> Register as Donor';
+        }
+    });
     
-// Validate last donation date (if provided, must be at least 4 months ago)
-if (lastDonation) {
-    const lastDonVal = validateDate(lastDonation, false, true); // ← ADD true here
-
-    if (!lastDonVal.valid) {
-        showError('lastDonation', lastDonVal.msg);
-        isValid = false;
-    }
-}
-    
-    // Validate district
-    if (!district) {
-        showError('district', 'District is required');
-        isValid = false;
-    } else if (district.length < 2) {
-        showError('district', 'District must be at least 2 characters');
-        isValid = false;
-    }
-    
-    // Validate area
-    if (!area) {
-        showError('area', 'Area is required');
-        isValid = false;
-    } else if (area.length < 2) {
-        showError('area', 'Area must be at least 2 characters');
-        isValid = false;
-    }
-    
-    // Validate gender
-    if (!gender) {
-        showError('gender', 'Gender is required');
-        isValid = false;
-    }
-    
-    // Validate declaration
-    if (!declaration) {
-        showError('declaration', 'You must confirm the declaration');
-        isValid = false;
-    }
-    
-    return isValid;
-}
-
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-        showMsg('Please fix the errors above before submitting.', false);
-        return;
-    }
-    
-    const v  = id => document.getElementById(id)?.value?.trim() || '';
-    const rv = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; };
-
-    const dob        = v('dob');
-    const age        = calcAge(dob);
-    const lastDonation = v('lastDonation') || null;
-
-    // Basic eligibility: well today, no recent fever, no recent surgery, age 18-60
-    const eligible = (rv('q1')==='yes') && (rv('q2')==='no') && (rv('q3')==='no') && age >= 18 && age <= 60;
-
-    // Calculate months since last donation (for search-donor filtering)
-    let lastDonationMonths = null;
-    if (lastDonation) {
-        const diff = (new Date() - new Date(lastDonation)) / (1000 * 60 * 60 * 24 * 30.44);
-        lastDonationMonths = Math.floor(diff);
-    }
-
-    const donorData = {
-        name:              v('name'),
-        nid:               v('nid'),
-        passport:          v('passport'),
-        dob,
-        age,
-        gender:            v('gender'),
-        bloodGroup:        v('bloodGroup'),
-        lastDonation,
-        lastDonationMonths,
-        phone:             v('phone'),
-        email:             v('email'),
-        district:          v('district'),
-        area:              v('area'),
-        healthQ1:          rv('q1'),
-        healthQ2:          rv('q2'),
-        healthQ3:          rv('q3'),
-        healthQ4:          rv('q4'),
-        femaleQ1:          rv('female_q1'),
-        femaleQ2:          rv('female_q2'),
-        eligible,
-        createdAt:         serverTimestamp()
-    };
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Registering…';
-        await addDoc(collection(db, 'donors'), donorData);
-        showMsg('✅ Registration successful! Thank you for registering as a blood donor.', true);
-        form.reset();
-        clearErrors('name', 'phone', 'email', 'bloodGroup', 'dob', 'lastDonation', 'district', 'area', 'gender', 'declaration');
-
-        setTimeout(() => {
-        window.location.href = "search-donor.html";
-    }, 2000);
-    } catch (err) {
-        console.error('Firestore error:', err);
-        showMsg('❌ Registration failed. Please check your connection and try again.', false);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Register as Donor';
-    }
-});
-
-// Real-time validation on blur
-document.getElementById('name').addEventListener('blur', () => validateName(document.getElementById('name').value.trim()).valid || showError('name', validateName(document.getElementById('name').value.trim()).msg));
-document.getElementById('phone').addEventListener('blur', () => validatePhone(document.getElementById('phone').value.trim()).valid || showError('phone', validatePhone(document.getElementById('phone').value.trim()).msg));
-document.getElementById('email').addEventListener('blur', () => { const email = document.getElementById('email').value.trim(); if(email && !validateEmail(email).valid) showError('email', validateEmail(email).msg); });
-document.getElementById('bloodGroup').addEventListener('change', () => validateBloodType(document.getElementById('bloodGroup').value).valid || showError('bloodGroup', validateBloodType(document.getElementById('bloodGroup').value).msg));
-
-// Real-time validation for date of birth
-document.getElementById('dob').addEventListener('blur', () => {
-  const val = document.getElementById('dob').value;
-  if (val) {
-    const result = validateDate(val, false, false);
-    if (!result.valid) showError('dob', result.msg);
-    else showError('dob', '');
-  } else {
-    showError('dob', '');
-  }
-});
-
-// Real-time validation for last donation date
-document.getElementById('lastDonation').addEventListener('blur', () => {
-  const val = document.getElementById('lastDonation').value;
-  if (val) {
-    const result = validateDate(val, false, true);
-    if (!result.valid) showError('lastDonation', result.msg);
-    else showError('lastDonation', '');
-  } else {
-    showError('lastDonation', '');
-  }
-});
-
+    attachRealtimeValidation();
+    setupReset();
 </script>
 
 <script>
-(function () {
-    const nav = document.querySelector('nav');
-    const navList = nav?.querySelector('.nav');
-    if (nav && navList) {
-        const btn = document.createElement('button');
-        btn.className = 'hamburger';
-        btn.setAttribute('aria-label', 'Toggle menu');
-        btn.innerHTML = '<span></span><span></span><span></span>';
-        nav.insertBefore(btn, navList);
- 
-        btn.addEventListener('click', () => {
-            btn.classList.toggle('open');
-            navList.classList.toggle('open');
-        });
- 
-        document.addEventListener('click', (e) => {
-            if (!nav.contains(e.target)) {
-                btn.classList.remove('open');
-                navList.classList.remove('open');
-            }
-        });
- 
-        navList.querySelectorAll('a').forEach(a =>
-            a.addEventListener('click', () => {
-                btn.classList.remove('open');
-                navList.classList.remove('open');
-            })
-        );
-    }
-})();
+    (function() {
+        const nav = document.querySelector('nav');
+        const navList = nav?.querySelector('.nav');
+        if (nav && navList && !document.querySelector('.hamburger')) {
+            const btn = document.createElement('button');
+            btn.className = 'hamburger';
+            btn.setAttribute('aria-label', 'Toggle menu');
+            btn.innerHTML = '<span></span><span></span><span></span>';
+            nav.insertBefore(btn, navList);
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('open');
+                navList.classList.toggle('open');
+            });
+            document.addEventListener('click', (e) => {
+                if (!nav.contains(e.target)) {
+                    btn.classList.remove('open');
+                    navList.classList.remove('open');
+                }
+            });
+            navList.querySelectorAll('a').forEach(a =>
+                a.addEventListener('click', () => {
+                    btn.classList.remove('open');
+                    navList.classList.remove('open');
+                })
+            );
+        }
+    })();
 </script>
- 
 </body>
 </html>

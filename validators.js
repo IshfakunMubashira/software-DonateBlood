@@ -60,6 +60,58 @@ export function validateEmail(email) {
 }
 
 // ===============================
+// NID (National ID) - Bangladesh format
+// Supports: 10, 13, or 17 digits
+// ===============================
+export function validateNID(nid) {
+  if (!nid) {
+    // NID is optional only if Passport is provided, but validation is done at form level
+    return { valid: true, value: "" };
+  }
+
+  const clean = nid.trim().replace(/\s+/g, "");
+
+  if (!/^\d+$/.test(clean)) {
+    return { valid: false, msg: "NID must contain digits only" };
+  }
+
+  if (![10, 13, 17].includes(clean.length)) {
+    return {
+      valid: false,
+      msg: "NID must be 10, 13, or 17 digits"
+    };
+  }
+
+  // Optional: prevent trivial fake numbers like 1111111111
+  if (/^(\d)\1+$/.test(clean)) {
+    return { valid: false, msg: "Invalid NID number" };
+  }
+
+  return { valid: true, value: clean };
+}
+
+// ===============================
+// Passport: 6 to 12 alphanumeric characters
+// ===============================
+export function validatePassport(passport) {
+  if (!passport) {
+    // Passport is optional only if NID is provided
+    return { valid: true, value: "" };
+  }
+
+  const clean = passport.trim().toUpperCase();
+
+  if (!/^[A-Z0-9]{6,12}$/.test(clean)) {
+    return {
+      valid: false,
+      msg: "Passport must be 6–12 alphanumeric characters"
+    };
+  }
+
+  return { valid: true, value: clean };
+}
+
+// ===============================
 // Bags: integer 1–10
 // ===============================
 export function validateBags(val) {
@@ -117,11 +169,10 @@ export function validateDate(dateStr, allowFuture = false, isDonationDate = fals
     return { valid: false, msg: "Date cannot be in the future" };
   }
 
-  // NEW: when future dates are allowed, past dates are invalid
+  // When future dates are allowed, past dates are invalid
   if (allowFuture && inputDate < today) {
     return { valid: false, msg: "Date cannot be in the past" };
   }
-
 
   // ❌ 4-month donation gap rule
   if (isDonationDate) {
@@ -148,17 +199,17 @@ export function showError(fieldId, msg) {
 
   if (errorEl) {
     errorEl.textContent = msg || "";
-    errorEl.style.color = "red"; // 🔴 enforce red error text
-    errorEl.style.fontSize = "0.85rem";
+    errorEl.style.color = "red";
+    errorEl.style.fontSize = "0.8rem";
+    errorEl.style.marginTop = "4px";
   }
 
   if (input) {
-    input.classList.toggle("input-error", !!msg);
-
-    // Optional: red border
     if (msg) {
+      input.classList.add("input-error");
       input.style.borderColor = "red";
     } else {
+      input.classList.remove("input-error");
       input.style.borderColor = "";
     }
   }

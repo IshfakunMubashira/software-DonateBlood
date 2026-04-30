@@ -12,6 +12,43 @@ let bankRequestsUnsubscribe = null;
 let inventoryUnsubscribe = null;
 let eventsUnsubscribe = null;
 
+// ======================= DATE HELPERS =======================
+/**
+ * Safely convert Firestore field (Timestamp, Date, string, or null) to a Date object
+ */
+function toDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === 'string') {
+    // Try parsing ISO or YYYY-MM-DD
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // Firestore Timestamp (v10 modular)
+  if (typeof value?.toDate === 'function') return value.toDate();
+  // Legacy Timestamp (seconds/nanoseconds)
+  if (value?.seconds !== undefined) return new Date(value.seconds * 1000);
+  return null;
+}
+
+/**
+ * Format a date for UI display (e.g., "Apr 29, 2026")
+ */
+function formatDate(dateVal) {
+  const d = toDate(dateVal);
+  if (!d) return '—';
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+/**
+ * Format date for <input type="date"> value (YYYY-MM-DD)
+ */
+function formatDateForInput(dateVal) {
+  const d = toDate(dateVal);
+  if (!d) return '';
+  return d.toISOString().split('T')[0];
+}
+
 // ==================== AUTHENTICATION ====================
 onAuthStateChanged(auth, async (user) => {
     if (user) {
