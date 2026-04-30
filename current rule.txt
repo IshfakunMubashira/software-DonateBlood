@@ -1,44 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    match /donors/{donor} {
-      allow read: if true;
-      allow create: if true; 
-      allow write: if request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.email));
-    }
-
-    match /requests/{reqDoc} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.email));
-    }
-
-    match /inventory/{item} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.email));
-    }
-
-    match /events/{event} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.email));
-    }
-
-    match /admins/{email} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null &&
-        (request.auth.email == email ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.email)));
-    }
-
-    match /site_settings/{setting} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.email));
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
