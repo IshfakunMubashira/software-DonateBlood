@@ -49,7 +49,6 @@
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fa-solid fa-droplet" style="color: #cc1a1a;"></i> DonateLife</h2>
                 <p>Admin Dashboard</p>
             </div>
             
@@ -609,49 +608,13 @@
   </div>
 </div>
 
-<!-- FOOTER -->
-<footer class="footer">
-    <div class="footer-box">
-        <img src="images/footer-logo.png" alt="">
-        <h1>Donate Blood, Save Life</h1>
-    </div>
-
-    <div class="footer-box">
-        <h3>Important Links</h3>
-        <a href="index.html">Home</a>
-        <a href="search-donor.html">Search Donor</a>
-        <a href="blood-bank.html">Blood Bank</a>
-        <a href="request.html">Blood Request</a>
-        <a href="donate-blood.html">Donate Blood</a>
-        <a href="admin.html">Admin-Site</a>
-    </div>
-
-<div class="footer-box">
-    <h3>Contact & Socials</h3>
-    <p>Phone: <a id="footer-phone-link" href="tel:"></a></p>
-    <p>Email: <a id="footer-email-link" href="mailto:"></a></p>
-    <p>Address: <span id="footer-address"></span></p>
-    <div class="socials">
-        <a id="facebook-link" href="#" target="_blank"><i class="fa-brands fa-facebook"></i></a>
-        <a id="instagram-link" href="#" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-        <a id="twitter-link" href="#" target="_blank"><i class="fa-brands fa-twitter"></i></a>
-    </div>
-</div>
-
-    <!-- Copyright -->
-    <div class="footer-bottom">
-        <p>© 2026 DonateLife. All Rights Reserved.</p>
-    </div>
-</footer>
-<script type="module" src="firebase-init.js"></script>
-<script type="module" src="scripts/footer-settings.js"></script>
 
     <!-- Main Admin JavaScript -->
     <script type="module" src="scripts/admin.js"></script>
 
 
 
-    <script>
+<script>
 (function () {
     /* ── Sidebar slide toggle for mobile ── */
     const sidebar = document.getElementById('sidebar');
@@ -694,6 +657,47 @@
             btn.querySelector('i').className = 'fa-solid fa-bars';
         }
     });
+
+    /* ── Sidebar footer-avoidance with a small gap (2px) to prevent shadow overlap ── */
+    const footer = document.querySelector('footer.footer');
+
+    function adjustSidebar() {
+        // On mobile the sidebar is a slide-over — skip this logic
+        if (window.innerWidth <= 768) {
+            sidebar.style.position = '';
+            sidebar.style.top      = '';
+            sidebar.style.bottom   = '';
+            sidebar.style.height   = '';
+            return;
+        }
+
+        const navHeight   = parseInt(getComputedStyle(document.documentElement)
+                               .getPropertyValue('--header-height')) || 140;
+        const footerTop   = footer.getBoundingClientRect().top;
+        const viewportH   = window.innerHeight;
+
+        if (footerTop < viewportH) {
+            // Footer is visible – anchor sidebar bottom just above footer (2px gap)
+            const scrollY      = window.scrollY || window.pageYOffset;
+            const footerAbsTop = Math.floor(footerTop + scrollY);
+
+            sidebar.style.position = 'absolute';
+            sidebar.style.top      = navHeight + 'px';
+            sidebar.style.bottom   = '';
+            // Subtract 2px to prevent box-shadow or subpixel overlap
+            sidebar.style.height   = (footerAbsTop - navHeight - 2) + 'px';
+        } else {
+            // Footer out of view – restore normal fixed behaviour
+            sidebar.style.position = 'fixed';
+            sidebar.style.top      = '';
+            sidebar.style.bottom   = '0';
+            sidebar.style.height   = '';
+        }
+    }
+
+    window.addEventListener('scroll', adjustSidebar, { passive: true });
+    window.addEventListener('resize', adjustSidebar, { passive: true });
+    adjustSidebar(); // run once on load
 })();
 </script>
 </body>
