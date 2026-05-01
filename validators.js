@@ -24,21 +24,26 @@ export function validatePhone(phone) {
 export function validateName(name) {
   if (!name) return { valid: false, msg: "Name is required" };
 
-  const clean = name.trim();
+  let clean = name.trim();
 
-  if (clean.length < 2) {
+  // Normalize: replace ". " with "." (remove space after dot) for validation only
+  let normalized = clean.replace(/\.\s+/g, '.');
+  // Also handle multiple spaces
+  normalized = normalized.replace(/\s+/g, ' ');
+
+  if (normalized.length < 2) {
     return { valid: false, msg: "Name must be at least 2 characters" };
   }
 
   const regex = /^[A-Za-z\u0980-\u09FF]+([ .'-][A-Za-z\u0980-\u09FF]+)*$/;
-
-  if (!regex.test(clean)) {
+  if (!regex.test(normalized)) {
     return {
       valid: false,
       msg: "Name can contain letters, spaces, dots, hyphens, and apostrophes only"
     };
   }
 
+  // Return original clean name (not normalized) to preserve user's formatting
   return { valid: true, value: clean };
 }
 
