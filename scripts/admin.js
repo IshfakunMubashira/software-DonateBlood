@@ -797,7 +797,7 @@ async function loadAdmins() {
   try {
     const snap = await getDocs(collection(db, 'admins'));
     const tbody = document.getElementById('adminsTableBody');
-    if (snap.empty) { tbody.innerHTML = '<tr><td colspan="6">No admins found</td></tr>'; return; }
+    if (snap.empty) { tbody.innerHTML = '<tr><td colspan="5">No admins found</td></tr>'; return; }
     let html = '';
     snap.forEach(doc => {
       const a = doc.data();
@@ -807,18 +807,17 @@ async function loadAdmins() {
         : '';
       html += `
         <tr>
-          <td>${a.name}</td>
+          <td>${a.name || ''}</td>
           <td>${doc.id}</td>
-          <td>${a.role}</td>
+          <td>${a.role || 'viewer'}</td>
           <td>${a.lastLogin ? new Date(a.lastLogin.toDate()).toLocaleString() : 'Never'}</td>
-          <td><span class="eligible-badge ${a.active}">${a.active ? 'Active' : 'Inactive'}</span></td>
           <td>${editButton}</td>
         </tr>`;
     });
     tbody.innerHTML = html;
   } catch (error) {
     console.error(error);
-    document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="6">Error loading admins</td></tr>';
+    document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="5">Error loading admins</td></tr>';
   }
 }
 
