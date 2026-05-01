@@ -1,4 +1,4 @@
-// admin.js - Complete Admin Panel (self-edit name only, no role/email/password)
+// admin.js - Complete Admin Panel (final, clean version)
 import { db, auth, storage, serverTimestamp, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, query, orderBy, onSnapshot, ref, uploadBytes, getDownloadURL, deleteObject } from '../firebase-init.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
@@ -74,12 +74,29 @@ async function reduceInventory(bloodGroup, bags) {
   });
 }
 
-// ------------------- Authentication -------------------
+// ------------------- Authentication & lastLogin -------------------
+async function updateAdminLastLogin(email) {
+  if (!email) return;
+  const adminRef = doc(db, 'admins', email);
+  try {
+    await updateDoc(adminRef, { lastLogin: serverTimestamp() });
+  } catch (error) {
+    console.warn('Could not update lastLogin:', error);
+  }
+}
+
+// Logout button
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await signOut(auth);
+  window.location.reload();
+});
+
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
     const isAdmin = await checkAdminStatus(user.email);
     if (isAdmin) {
+      await updateAdminLastLogin(user.email);
       showAdminContent();
       await loadAllData();
       setupRealtimeBadges();
@@ -101,7 +118,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   try {
     errorElement.textContent = '';
     await signInWithEmailAndPassword(auth, email, password);
-    // Update lastLogin after successful sign-in
     await updateAdminLastLogin(email);
   } catch (error) {
     console.error('Login error:', error);
@@ -118,7 +134,12 @@ async function checkAdminStatus(email) {
       return true;
     } else {
       if (email === 'admin@donatelife.org') {
-        await setDoc(doc(db, 'admins', email), { name: 'Super Admin', role: 'super_admin', active: true, createdAt: serverTimestamp() });
+        await setDoc(doc(db, 'admins', email), { 
+          name: 'Super Admin', 
+          role: 'super_admin', 
+          active: true,
+          createdAt: serverTimestamp() 
+        });
         currentAdminRole = 'super_admin';
         document.getElementById('adminName').textContent = 'Super Admin';
         return true;
@@ -131,7 +152,7 @@ async function checkAdminStatus(email) {
   }
 }
 
-// ------------------- Load All Data Once (client-side filtering) -------------------
+// ------------------- Load All Data (client-side) -------------------
 async function loadAllData() {
   try {
     const donorsSnap = await getDocs(collection(db, 'donors'));
@@ -147,6 +168,7 @@ async function loadAllData() {
     loadRecentDonors();
     loadRecentRequests();
     loadInventoryBars();
+    await updateTotalEventsCount();
 
     if (activeTab === 'donors') applyDonorFilters();
     if (activeTab === 'requests') applyRequestFilters();
@@ -218,6 +240,17 @@ async function loadInventoryBars() {
   } catch (error) { console.error(error); }
 }
 
+async function updateTotalEventsCount() {
+  try {
+    const snap = await getDocs(collection(db, 'events'));
+    const total = snap.size;
+    const element = document.getElementById('totalEvents');
+    if (element) element.textContent = total;
+  } catch (error) {
+    console.error('Error counting total events:', error);
+  }
+}
+
 // ------------------- UI Helpers -------------------
 function showAdminContent() {
   document.getElementById('loginSection').style.display = 'none';
@@ -238,17 +271,6 @@ function updateCurrentDate() {
   const dateElement = document.getElementById('currentDate');
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   dateElement.textContent = new Date().toLocaleDateString(undefined, options);
-}
-
-async function updateAdminLastLogin(email) {
-  if (!email) return;
-  const adminRef = doc(db, 'admins', email);
-  try {
-    await updateDoc(adminRef, { lastLogin: serverTimestamp() });
-  } catch (error) {
-    // If doc doesn't exist, ignore (should not happen for valid admins)
-    console.warn('Could not update lastLogin:', error);
-  }
 }
 
 // ------------------- Tab Navigation -------------------
@@ -516,9 +538,8 @@ window.editRequest = async function(id, type) {
       document.getElementById('editRequestType').value = type;
       document.getElementById('editRequestPatient').value = r.patientName;
       
-      // Populate blood group select with all options
-      const bloodSelect = document.getElementById('editRequestBloodGroup');
       const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+      const bloodSelect = document.getElementById('editRequestBloodGroup');
       bloodSelect.innerHTML = bloodGroups.map(g => `<option value="${g}" ${g === r.bloodGroup ? 'selected' : ''}>${g}</option>`).join('');
       
       document.getElementById('editRequestBags').value = r.bags;
@@ -528,7 +549,6 @@ window.editRequest = async function(id, type) {
       
       if (type === 'bank') {
         document.getElementById('returnGroupField').style.display = 'block';
-        // Populate return group select similarly
         const returnSelect = document.getElementById('editRequestReturnGroup');
         returnSelect.innerHTML = bloodGroups.map(g => `<option value="${g}" ${g === (r.returnGroup || '') ? 'selected' : ''}>${g}</option>`).join('');
       } else {
@@ -627,6 +647,7 @@ window.openInventoryModal = async function(bloodGroup = '') {
     if (docSnap.exists()) {
       document.getElementById('inventoryBloodGroup').value = bloodGroup;
       document.getElementById('inventoryBags').value = docSnap.data().bags || 0;
+      // Notes field removed – no line here
     }
   } else {
     document.getElementById('inventoryForm').reset();
@@ -648,7 +669,7 @@ document.getElementById('inventoryForm')?.addEventListener('submit', async (e) =
   } catch (error) { showNotification('Update failed', 'error'); }
 });
 
-// ------------------- EVENTS (with external URL support) -------------------
+// ------------------- EVENTS (past dates only) -------------------
 async function loadEvents() {
   try {
     const snap = await getDocs(query(collection(db, 'events'), orderBy('date', 'desc')));
@@ -667,6 +688,7 @@ async function loadEvents() {
 async function refreshEvents() {
   document.getElementById('eventsGrid').innerHTML = '<div class="loading">Refreshing...</div>';
   await loadEvents();
+  await updateTotalEventsCount();
   showNotification('Events refreshed', 'success');
 }
 
@@ -680,6 +702,11 @@ window.openEventModal = async function(eventId = null) {
   document.getElementById('eventImageUrls').value = '';
   document.getElementById('existingImages').innerHTML = '';
   document.getElementById('eventForm').dataset.eventId = '';
+
+  // Restrict date picker to past dates only
+  const dateInput = document.getElementById('eventDate');
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.max = today;
 
   if (eventId) {
     const docSnap = await getDoc(doc(db, 'events', eventId));
@@ -739,6 +766,15 @@ document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
   const files = document.getElementById('eventImages').files;
   const urlText = document.getElementById('eventImageUrls').value;
 
+  // Past date validation
+  const selectedDate = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (selectedDate > today) {
+    showNotification('Only past events can be added. Please select a date that has already occurred.', 'error');
+    return;
+  }
+
   let externalUrls = [];
   if (urlText.trim()) {
     externalUrls = urlText.split('\n')
@@ -767,7 +803,7 @@ document.getElementById('eventForm')?.addEventListener('submit', async (e) => {
       await updateDoc(doc(db, 'events', eventId), data);
     } else {
       data.createdAt = serverTimestamp();
-      data.status = 'upcoming';
+      data.status = 'past';
       data.images = [...uploadedUrls, ...externalUrls];
       await addDoc(collection(db, 'events'), data);
     }
@@ -790,7 +826,7 @@ window.deleteEvent = async function(id) {
   }
 };
 
-// ------------------- ADMINS (view only + self-edit name only) -------------------
+// ------------------- ADMINS (5 columns, no status) -------------------
 async function loadAdmins() {
   try {
     const snap = await getDocs(collection(db, 'admins'));
@@ -871,7 +907,6 @@ window.openSelfEditModal = async function() {
       }
     });
   }
-  // Pre-fill form
   document.getElementById('selfEditName').value = data.name || '';
   document.getElementById('selfEditEmail').value = email;
   document.getElementById('selfEditRole').value = data.role || 'viewer';
@@ -884,12 +919,12 @@ window.closeSelfEditModal = function() {
 };
 
 async function refreshAdmins() {
-  document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="6" class="loading">Refreshing...</td></tr>';
+  document.getElementById('adminsTableBody').innerHTML = '<tr><td colspan="5" class="loading">Refreshing...</td></tr>';
   await loadAdmins();
   showNotification('Admin list refreshed', 'success');
 }
 
-// ------------------- SETTINGS (General & Social only) -------------------
+// ------------------- SETTINGS -------------------
 async function loadSettings() {
   try {
     const generalSnap = await getDoc(doc(db, 'settings', 'general'));
@@ -935,11 +970,17 @@ document.getElementById('socialSettingsForm')?.addEventListener('submit', async 
   } catch (error) { showNotification('Save failed', 'error'); }
 });
 
-// ------------------- Real‑time Badges -------------------
+// ------------------- Real‑time Badges & Total Events -------------------
 function setupRealtimeBadges() {
   onSnapshot(collection(db, 'donors'), (snap) => {
     document.getElementById('donorsBadge').textContent = snap.size;
   });
+  
+  // Update total events count in real time
+  onSnapshot(collection(db, 'events'), () => {
+    updateTotalEventsCount();
+  });
+  
   const updatePendingBadge = () => {
     Promise.all([
       getDocs(collection(db, 'public_requests')),
