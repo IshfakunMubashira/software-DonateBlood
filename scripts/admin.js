@@ -627,7 +627,6 @@ window.openInventoryModal = async function(bloodGroup = '') {
     if (docSnap.exists()) {
       document.getElementById('inventoryBloodGroup').value = bloodGroup;
       document.getElementById('inventoryBags').value = docSnap.data().bags || 0;
-      document.getElementById('inventoryNotes').value = docSnap.data().notes || '';
     }
   } else {
     document.getElementById('inventoryForm').reset();
@@ -641,9 +640,8 @@ document.getElementById('inventoryForm')?.addEventListener('submit', async (e) =
   const group = document.getElementById('inventoryBloodGroup').value;
   if (!group) { showNotification('Please select a blood group', 'error'); return; }
   const bags = parseInt(document.getElementById('inventoryBags').value);
-  const notes = document.getElementById('inventoryNotes').value;
   try {
-    await setDoc(doc(db, 'inventory', group), { group, bags, notes, lastUpdated: serverTimestamp() }, { merge: true });
+    await setDoc(doc(db, 'inventory', group), { group, bags, lastUpdated: serverTimestamp() }, { merge: true });
     closeInventoryModal();
     await refreshInventory();
     showNotification('Inventory updated', 'success');
