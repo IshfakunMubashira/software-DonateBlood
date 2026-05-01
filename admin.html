@@ -583,7 +583,13 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>Phone</label><input type="tel" id="editRequestPhone" required></div>
-        <div class="form-group"><label>Status</label><select id="editRequestStatus"><option>pending</option><option>approved</option><option>rejected</option><option>fulfilled</option></select></div>
+        <select id="editRequestStatus">
+            <option>pending</option>
+            <option>approved</option>
+            <option>rejected</option>
+            <option>fulfilled</option>
+            <option>expired</option>
+        </select>
       </div>
       <div id="returnGroupField" style="display:none;">
         <div class="form-group"><label>Return Blood Group (Bank only)</label><select id="editRequestReturnGroup">[options]</select></div>

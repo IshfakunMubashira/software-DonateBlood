@@ -101,15 +101,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   try {
     errorElement.textContent = '';
     await signInWithEmailAndPassword(auth, email, password);
+    // Update lastLogin after successful sign-in
+    await updateAdminLastLogin(email);
   } catch (error) {
     console.error('Login error:', error);
     errorElement.textContent = error.code === 'auth/invalid-credential' ? 'Invalid email or password' : 'Login failed. Try again.';
   }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await signOut(auth);
-  window.location.reload();
 });
 
 async function checkAdminStatus(email) {
@@ -241,6 +238,17 @@ function updateCurrentDate() {
   const dateElement = document.getElementById('currentDate');
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   dateElement.textContent = new Date().toLocaleDateString(undefined, options);
+}
+
+async function updateAdminLastLogin(email) {
+  if (!email) return;
+  const adminRef = doc(db, 'admins', email);
+  try {
+    await updateDoc(adminRef, { lastLogin: serverTimestamp() });
+  } catch (error) {
+    // If doc doesn't exist, ignore (should not happen for valid admins)
+    console.warn('Could not update lastLogin:', error);
+  }
 }
 
 // ------------------- Tab Navigation -------------------
@@ -507,14 +515,22 @@ window.editRequest = async function(id, type) {
       document.getElementById('editRequestId').value = id;
       document.getElementById('editRequestType').value = type;
       document.getElementById('editRequestPatient').value = r.patientName;
-      document.getElementById('editRequestBloodGroup').value = r.bloodGroup;
+      
+      // Populate blood group select with all options
+      const bloodSelect = document.getElementById('editRequestBloodGroup');
+      const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+      bloodSelect.innerHTML = bloodGroups.map(g => `<option value="${g}" ${g === r.bloodGroup ? 'selected' : ''}>${g}</option>`).join('');
+      
       document.getElementById('editRequestBags').value = r.bags;
       document.getElementById('editRequestHospital').value = r.hospital || r.location;
       document.getElementById('editRequestPhone').value = r.phone;
       document.getElementById('editRequestStatus').value = r.status;
+      
       if (type === 'bank') {
         document.getElementById('returnGroupField').style.display = 'block';
-        document.getElementById('editRequestReturnGroup').value = r.returnGroup || '';
+        // Populate return group select similarly
+        const returnSelect = document.getElementById('editRequestReturnGroup');
+        returnSelect.innerHTML = bloodGroups.map(g => `<option value="${g}" ${g === (r.returnGroup || '') ? 'selected' : ''}>${g}</option>`).join('');
       } else {
         document.getElementById('returnGroupField').style.display = 'none';
       }
