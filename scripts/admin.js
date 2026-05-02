@@ -1,6 +1,7 @@
 // admin.js - Complete Admin Panel (final, clean version)
 import { db, auth, storage, serverTimestamp, collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, query, orderBy, onSnapshot, ref, uploadBytes, getDownloadURL, deleteObject } from '../firebase-init.js';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+import { validateNID, validatePassport } from '../validators.js';   // ✅ ADD THIS LINE
 
 // ------------------- Global Variables -------------------
 let currentUser = null;
@@ -377,6 +378,8 @@ window.editDonor = async function(id) {
       document.getElementById('editDonorEmail').value = d.email || '';
       document.getElementById('editDonorArea').value = d.area || '';
       document.getElementById('editDonorDistrict').value = d.district || '';
+      document.getElementById('editDonorNid').value = d.nid || '';
+      document.getElementById('editDonorPassport').value = d.passport || '';
       document.getElementById('editDonorLastDonation').value = d.lastDonation ? formatDateForInput(d.lastDonation) : '';
       document.getElementById('editDonorEligible').value = d.eligible ? 'true' : 'false';
       document.getElementById('donorEditModal').style.display = 'block';
@@ -387,6 +390,8 @@ window.editDonor = async function(id) {
 document.getElementById('donorEditForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = document.getElementById('editDonorId').value;
+  
+  // Basic fields
   const data = {
     name: document.getElementById('editDonorName').value,
     bloodGroup: document.getElementById('editDonorBloodGroup').value,
@@ -400,12 +405,61 @@ document.getElementById('donorEditForm')?.addEventListener('submit', async (e) =
     eligible: document.getElementById('editDonorEligible').value === 'true',
     updatedAt: serverTimestamp()
   };
+  
+  // NID / Passport validation (mutual exclusivity)
+  let nidValue = document.getElementById('editDonorNid').value.trim();
+  let passportValue = document.getElementById('editDonorPassport').value.trim();
+  
+  if (nidValue && passportValue) {
+    showNotification('Provide only one identification (NID or Passport)', 'error');
+    return;
+  }
+  if (nidValue) {
+    const nidRes = validateNID(nidValue);
+    if (!nidRes.valid) { showNotification(nidRes.msg, 'error'); return; }
+    nidValue = nidRes.value;
+  }
+  if (passportValue) {
+    const passRes = validatePassport(passportValue);
+    if (!passRes.valid) { showNotification(passRes.msg, 'error'); return; }
+    passportValue = passRes.value;
+  }
+  
+  data.nid = nidValue || null;
+  data.passport = passportValue || null;
+  
+  // Last donation date validation (optional but if provided must be ≥4 months ago)
+  const lastDonationRaw = data.lastDonation;
+  if (lastDonationRaw) {
+    const donationDate = new Date(lastDonationRaw);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (donationDate > today) {
+      showNotification('Last donation cannot be in the future', 'error');
+      return;
+    }
+    const minAllowed = new Date(today);
+    minAllowed.setMonth(minAllowed.getMonth() - 4);
+    if (donationDate > minAllowed) {
+      showNotification('Last donation must be at least 4 months ago', 'error');
+      return;
+    }
+    // Recalculate lastDonationMonths if needed
+    const diffMonths = (today - donationDate) / (1000 * 60 * 60 * 24 * 30.44);
+    data.lastDonationMonths = Math.floor(diffMonths);
+  } else {
+    data.lastDonationMonths = null;
+  }
+  
   try {
     await updateDoc(doc(db, 'donors', id), data);
     closeDonorEditModal();
     await refreshDonors();
     showNotification('Donor updated', 'success');
-  } catch (error) { showNotification('Update failed', 'error'); }
+  } catch (error) {
+    console.error(error);
+    showNotification('Update failed: ' + error.message, 'error');
+  }
 });
 
 window.deleteDonor = async function(id) {
